@@ -94,7 +94,7 @@ jobs:
         run: |
           az group create \
             --name ${{ env.AZURE_RG }} \
-            --location westeurope \
+            --location germanywestcentral \
             --output none
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
@@ -102,9 +102,10 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RG }}
           template: infra/main.bicep
           parameters: >
-            location=westeurope
+            location=germanywestcentral
             suffix=${{ env.SUFFIX }}
             prefix=${{ env.PREFIX }}
+            enableFreeTier=true
           failOnStdErr: false
 
   deploy-functions:
