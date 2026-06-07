@@ -104,7 +104,7 @@ jobs:
             location=germanywestcentral
             suffix=${{ env.SUFFIX }}
             prefix=${{ env.PREFIX }}
-            enableFreeTier=true
+            enableFreeTier=false
           failOnStdErr: false
       - name: Save infra outputs
         run: |
