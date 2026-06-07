@@ -41,7 +41,6 @@ module eventgrid 'modules/eventgrid.bicep' = {
     suffix: deploymentSuffix
     prefix: prefix
     storageAccountId: storage.outputs.id
-    functionAppId: functionapp.outputs.functionAppId
   }
 }
 
@@ -61,3 +60,5 @@ output cosmosEndpoint string = cosmos.outputs.endpoint
 output cosmosDatabaseName string = cosmos.outputs.databaseName
 output acsName string = acs.outputs.name
 output functionPrincipalId string = functionapp.outputs.functionPrincipalId
+output systemTopicName string = eventgrid.outputs.systemTopicName
+output systemTopicId string = eventgrid.outputs.systemTopicId

@@ -2,7 +2,6 @@ param location string
 param suffix string
 param prefix string
 param storageAccountId string
-param functionAppId string
 
 resource systemTopic 'Microsoft.EventGrid/systemTopics@2022-06-15' = {
   name: 'evgt-${prefix}-${suffix}'
@@ -13,27 +12,5 @@ resource systemTopic 'Microsoft.EventGrid/systemTopics@2022-06-15' = {
   }
 }
 
-resource eventSubscription 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2022-06-15' = {
-  parent: systemTopic
-  name: 'blob-created-sub'
-  properties: {
-    destination: {
-      endpointType: 'AzureFunction'
-      properties: {
-        resourceId: functionAppId
-        maxEventsPerBatch: 1
-        preferredBatchSizeInKilobytes: 64
-      }
-    }
-    filter: {
-      includedEventTypes: ['Microsoft.Storage.BlobCreated']
-      subjectBeginsWith: '/blobServices/default/containers/orders-inbox/'
-      advancedFilters: []
-    }
-    eventDeliverySchema: 'EventGridSchema'
-    retryPolicy: {
-      maxDeliveryAttempts: 3
-      eventTimeToLiveInMinutes: 5
-    }
-  }
-}
+output systemTopicName string = systemTopic.name
+output systemTopicId string = systemTopic.id

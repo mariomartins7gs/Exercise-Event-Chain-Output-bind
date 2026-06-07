@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "4823045244465380287"
+      "templateHash": "17114624081389150269"
     }
   },
   "parameters": {
@@ -573,9 +573,6 @@
           },
           "storageAccountId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'storage-module'), '2025-04-01').outputs.id.value]"
-          },
-          "functionAppId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'functionapp-module'), '2025-04-01').outputs.functionAppId.value]"
           }
         },
         "template": {
@@ -585,7 +582,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "16537512957444759028"
+              "templateHash": "12569501070583808738"
             }
           },
           "parameters": {
@@ -600,9 +597,6 @@
             },
             "storageAccountId": {
               "type": "string"
-            },
-            "functionAppId": {
-              "type": "string"
             }
           },
           "resources": [
@@ -615,42 +609,21 @@
                 "source": "[parameters('storageAccountId')]",
                 "topicType": "Microsoft.Storage.StorageAccounts"
               }
-            },
-            {
-              "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
-              "apiVersion": "2022-06-15",
-              "name": "[format('{0}/{1}', format('evgt-{0}-{1}', parameters('prefix'), parameters('suffix')), 'blob-created-sub')]",
-              "properties": {
-                "destination": {
-                  "endpointType": "AzureFunction",
-                  "properties": {
-                    "resourceId": "[parameters('functionAppId')]",
-                    "maxEventsPerBatch": 1,
-                    "preferredBatchSizeInKilobytes": 64
-                  }
-                },
-                "filter": {
-                  "includedEventTypes": [
-                    "Microsoft.Storage.BlobCreated"
-                  ],
-                  "subjectBeginsWith": "/blobServices/default/containers/orders-inbox/",
-                  "advancedFilters": []
-                },
-                "eventDeliverySchema": "EventGridSchema",
-                "retryPolicy": {
-                  "maxDeliveryAttempts": 3,
-                  "eventTimeToLiveInMinutes": 5
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.EventGrid/systemTopics', format('evgt-{0}-{1}', parameters('prefix'), parameters('suffix')))]"
-              ]
             }
-          ]
+          ],
+          "outputs": {
+            "systemTopicName": {
+              "type": "string",
+              "value": "[format('evgt-{0}-{1}', parameters('prefix'), parameters('suffix'))]"
+            },
+            "systemTopicId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.EventGrid/systemTopics', format('evgt-{0}-{1}', parameters('prefix'), parameters('suffix')))]"
+            }
+          }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'functionapp-module')]",
         "[resourceId('Microsoft.Resources/deployments', 'storage-module')]"
       ]
     },
@@ -792,6 +765,14 @@
     "functionPrincipalId": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'functionapp-module'), '2025-04-01').outputs.functionPrincipalId.value]"
+    },
+    "systemTopicName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'eventgrid-module'), '2025-04-01').outputs.systemTopicName.value]"
+    },
+    "systemTopicId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'eventgrid-module'), '2025-04-01').outputs.systemTopicId.value]"
     }
   }
 }
