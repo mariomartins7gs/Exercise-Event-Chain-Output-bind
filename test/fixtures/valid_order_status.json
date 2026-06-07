@@ -1,0 +1,15 @@
+{
+    "id": "ORD-0042-a1b2c3d4",
+    "orderId": "ORD-0042-a1b2c3d4",
+    "displayId": 42,
+    "displayOrder": "ORD-0042",
+    "status": "pending_confirmation",
+    "expiresAt": "2026-06-06T12:03:00Z",
+    "lastUpdatedAt": "2026-06-06T12:00:05Z",
+    "timeline": [
+        {"status": "submitted", "timestamp": "12:00:01", "details": "Order submitted via web form"},
+        {"status": "validating", "timestamp": "12:00:02", "details": "Order validation complete"},
+        {"status": "sms_sent", "timestamp": "12:00:05", "details": "SMS sent via ACS"},
+        {"status": "pending_confirmation", "timestamp": "12:00:05", "details": "Waiting for confirmation"}
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "customerName": "Maria Silva",
+    "customerPhone": "+351911234567",
+    "items": [
+        {"itemId": "ITM-001", "name": "Widget A", "quantity": 2, "unitPrice": 15.50},
+        {"itemId": "ITM-002", "name": "Widget B", "quantity": 1, "unitPrice": 29.99}
+    ],
+    "total": 61.00,
+    "tax": 14.03,
+    "notes": "Ring doorbell"
+}

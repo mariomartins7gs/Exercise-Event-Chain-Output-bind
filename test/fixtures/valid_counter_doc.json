@@ -1,0 +1,9 @@
+{
+    "id": "orderCounter",
+    "partitionKey": "counter",
+    "currentValue": 42,
+    "_etag": "\"00001234-0000-0000-0000-000000000000\"",
+    "_rid": "XQAAAA==",
+    "_self": "dbs/XQ==/colls/XQ=/docs/XQ==/",
+    "_ts": 1749200000
+}

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azure Deploy Guide — IPO — Event-Driven Order Processing Pipeline</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #1a1a2e;
+  --secondary: #0f172a;
+  --azure: #0078D4;
+  --azure-light: #e6f2fc;
+  --azure-dark: #005a9e;
+  --text: #1e293b;
+  --text-light: #475569;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --card-bg: #ffffff;
+  --body-bg: #f8fafc;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--body-bg);
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: #fff;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border-bottom: 4px solid var(--azure);
+}
+.hero-inner { max-width: 780px; margin: 0 auto; }
+.hero .institute {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+.hero h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: 0.25rem; }
+.hero .subtitle { font-size: 1rem; color: #cbd5e1; margin-bottom: 1.5rem; }
+.hero .concept {
+  display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+  font-size: 0.9rem; color: #94a3b8;
+}
+.hero .concept span { padding: 0.25rem 0.75rem; border-radius: 4px; }
+.hero .concept .c-input { background: rgba(37,99,235,0.2); color: #93c5fd; }
+.hero .concept .c-process { background: rgba(245,158,11,0.2); color: #fcd34d; }
+.hero .concept .c-output { background: rgba(5,150,105,0.2); color: #6ee7b7; }
+
+.wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.toc {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.toc h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.toc ol { list-style: none; counter-reset: toc-counter; }
+.toc li { counter-increment: toc-counter; margin-bottom: 0.3rem; }
+.toc li::before {
+  content: counter(toc-counter) ". ";
+  color: var(--azure);
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+.toc a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.toc a:hover { color: var(--azure); }
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.card h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--azure);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card h2 .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--azure);
+  color: #fff;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.card h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 1rem 0 0.25rem; }
+.card p, .card li { font-size: 0.92rem; color: var(--text); margin-bottom: 0.3rem; }
+.card ul, .card ol { padding-left: 1.5rem; margin-bottom: 0.5rem; }
+.card .muted { color: var(--muted); font-size: 0.85rem; }
+
+.ipo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+@media (max-width: 640px) { .ipo-grid { grid-template-columns: 1fr; } }
+
+.ipo-item {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  border-left: 4px solid var(--azure);
+}
+.ipo-item h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+.ipo-item h4 .emoji { margin-right: 0.3rem; }
+.ipo-item pre { margin: 0; font-size: 0.8rem; }
+.ipo-item code {
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 0.85em;
+  background: #f1f5f9;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+.ipo-item ul { padding-left: 1rem; margin: 0; }
+.ipo-item li { font-size: 0.88rem; margin-bottom: 0.2rem; }
+
+.ipo-input { border-left-color: var(--blue); }
+.ipo-input h4 { color: var(--blue); }
+.ipo-process { border-left-color: var(--amber); }
+.ipo-process h4 { color: var(--amber); }
+.ipo-output { border-left-color: var(--green); }
+.ipo-output h4 { color: var(--green); }
+.ipo-verify { border-left-color: var(--muted); }
+.ipo-verify h4 { color: var(--muted); }
+.ipo-error { border-left-color: var(--red); grid-column: 1 / -1; }
+.ipo-error h4 { color: var(--red); }
+
+pre {
+  background: #0d1117;
+  color: #c9d1d9;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.82rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  line-height: 1.5;
+}
+
+.error-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.25rem; }
+.error-table th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+.error-table td {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.error-table tr:nth-child(even) { background: #f8fafc; }
+.error-table td:first-child { font-family: monospace; color: var(--red); font-size: 0.82rem; }
+.error-table td:nth-child(2) { font-size: 0.82rem; }
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+
+.expected-json {
+  background: #0d1117;
+  color: #c9d1d9;
+  padding: 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.prereq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+@media (max-width: 640px) { .prereq-grid { grid-template-columns: 1fr; } }
+.prereq-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+.prereq-item .check { color: var(--green); font-weight: bold; }
+.prereq-item .missing { color: var(--red); font-weight: bold; }
+
+footer {
+  background: var(--primary);
+  color: #94a3b8;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.82rem;
+}
+
+@media print {
+  .toc { display: none; }
+  .card { break-inside: avoid; box-shadow: none; }
+  .hero { background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; }
+  .hero h1, .hero .subtitle, .hero .institute, .hero .concept { color: #000 !important; }
+  .hero .concept .c-input, .hero .concept .c-process, .hero .concept .c-output { background: #f1f5f9; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="institute">ITS-ICT Piemonte — BAD 26</p>
+    <h1>Azure Deploy Guide</h1>
+    <p class="subtitle">Input → Process → Output — Deploy Completo della Pipeline</p>
+    <div class="concept">
+      <span class="c-input">📥 Input — cosa serve prima di iniziare</span>
+      <span class="c-process">⚙️ Process — comandi da eseguire</span>
+      <span class="c-output">📤 Output — risultato atteso</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<!-- ======== PREREQUISITES ======== -->
+<div class="card" id="prerequisiti">
+  <h2><span class="num">0</span> Prerequisiti</h2>
+  <p>Prima di iniziare il deploy, assicurati di avere tutti i tool installati e configurati.</p>
+  <div class="prereq-grid">
+    <div class="prereq-item"><span class="check">✔</span> Python 3.11+ installato</div>
+    <div class="prereq-item"><span class="check">✔</span> Azure CLI (<code>az</code>) — <code>az login</code> eseguito</div>
+    <div class="prereq-item"><span class="check">✔</span> Azure Functions Core Tools v4 (<code>func</code>)</div>
+    <div class="prereq-item"><span class="check">✔</span> Sottoscrizione Azure for Students attiva</div>
+    <div class="prereq-item"><span class="check">✔</span> Repository clonato in locale</div>
+    <div class="prereq-item"><span class="check">✔</span> Virtual env attivato + <code>pip install -r requirements.txt</code></div>
+    <div class="prereq-item"><span class="check">✔</span> Bicep CLI — <code>az bicep install</code></div>
+    <div class="prereq-item"><span class="check">✔</span> <code>local.settings.json</code> presente</div>
+  </div>
+</div>
+
+<!-- ======== STEP 1 ======== -->
+<div class="card" id="step1">
+  <h2><span class="num">1</span> Create Resource Group</h2>
+
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <ul>
+        <li>Azure subscription con crediti Azure for Students</li>
+        <li>Location: <code>westeurope</code></li>
+        <li>RG name: <code>rg-orderprocessing-001</code></li>
+      </ul>
+    </div>
+
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code>az group create \
+  --name rg-orderprocessing-001 \
+  --location westeurope</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Output</h4>
+      <pre><code>{
+  "id": "/subscriptions/.../resourceGroups/rg-orderprocessing-001",
+  "location": "westeurope",
+  "properties": {
+    "provisioningState": "Succeeded"
+  }
+}</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-verify">
+      <h4><span class="emoji">✅</span>Verify</h4>
+      <pre><code>az group exists \
+  --name rg-orderprocessing-001
+# returns: true</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>SubscriptionNotFound</td><td>Esegui <code>az login</code> e verifica <code>az account show</code></td></tr>
+        <tr><td>LocationNotAvailable</td><td>Prova <code>northeurope</code> o <code>westeurope</code></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======== STEP 2 ======== -->
+<div class="card" id="step2">
+  <h2><span class="num">2</span> Deploy Bicep — 8 Azure Resources + RBAC</h2>
+
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <ul>
+        <li>Resource Group <code>rg-orderprocessing-001</code> (da Step 1)</li>
+        <li>File: <code>infra/main.bicep</code> + 6 moduli in <code>infra/modules/</code></li>
+        <li>File: <code>infra/parameters.json</code></li>
+      </ul>
+    </div>
+
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code>az deployment group create \
+  --resource-group rg-orderprocessing-001 \
+  --template-file infra/main.bicep \
+  --parameters @infra/parameters.json</code></pre>
+      <p class="muted">Durata: ~5-8 minuti (Cosmos DB free tier è il più lento)</p>
+    </div>
+
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Output</h4>
+      <pre><code>{
+  "properties": {
+    "provisioningState": "Succeeded",
+    "outputs": {
+      "storageAccountName": { "value": "storder001" },
+      "functionAppName": { "value": "func-order-001" },
+      "cosmosEndpoint": { "value": "https://cosmos-order-001.documents.azure.com:443/" },
+      "functionPrincipalId": { "value": "00000000-0000-0000-0000-000000000000" }
+    }
+  }
+}</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-verify">
+      <h4><span class="emoji">✅</span>Verify</h4>
+      <pre><code># Elenca tutte le risorse nel RG
+az resource list \
+  --resource-group rg-orderprocessing-001 \
+  --output table
+
+# Verifica gli output del deploy
+az deployment group show \
+  --resource-group rg-orderprocessing-001 \
+  --name main \
+  --query properties.outputs</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>AuthorizationFailed</td><td>Il Service Principal / utente non ha permessi. <code>az role assignment list --assignee &lt;object-id&gt;</code></td></tr>
+        <tr><td>QuotaExceeded</td><td>Limite di Cosmos DB free tier per subscription. Elimina altri Cosmos free tier o usa un'altra sub</td></tr>
+        <tr><td>No matches for sku</td><td>Cosmos DB free tier non disponibile in questa region. Prova <code>northeurope</code></td></tr>
+        <tr><td>StorageAccountAlreadyTaken</td><td>Il nome <code>storder001</code> è già occupato. Cambia <code>suffix</code> in parameters.json</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======== STEP 3 ======== -->
+<div class="card" id="step3">
+  <h2><span class="num">3</span> Deploy Function App</h2>
+
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <ul>
+        <li>Function App <code>func-order-001</code> (da Step 2 — Bicep)</li>
+        <li>Codice sorgente in <code>src/</code></li>
+        <li>File: <code>host.json</code> + <code>requirements.txt</code></li>
+      </ul>
+    </div>
+
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code>func azure functionapp publish \
+  func-order-001 \
+  --python
+
+# Per deploy incrementale (solo modifiche):
+func azure functionapp publish \
+  func-order-001 \
+  --python \
+  --build remote</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Output</h4>
+      <pre><code>Getting site publishing info...
+Creating archive for upload...
+Uploading archive...
+Upload completed successfully.
+Deployment completed successfully.
+Syncing triggers...
+Functions in func-order-001:
+    submit_order - [httpTrigger]
+    confirm_handler - [httpTrigger]
+    get_order_status - [httpTrigger]
+    order_validator - [eventGridTrigger]
+    order_workflow - [orchestrationTrigger]</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-verify">
+      <h4><span class="emoji">✅</span>Verify</h4>
+      <pre><code># Le funzioni devono essere visibili
+az functionapp function list \
+  --name func-order-001 \
+  --resource-group rg-orderprocessing-001 \
+  --output table
+
+# N.B. — order_workflow (DF orchestrator)
+# potrebbe non apparire finché non viene
+# invocata la prima volta</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>Site not found</td><td>Il nome <code>func-order-001</code> non corrisponde. Verifica <code>az functionapp list --output table</code></td></tr>
+        <tr><td>Python version mismatch</td><td>Il Bicep deploya Python 3.11. Verifica <code>az functionapp config show</code></td></tr>
+        <tr><td>BUILD FAILED: oryx build</td><td>Verifica <code>requirements.txt</code> sia nella root del deploy. Riprova con <code>--build remote</code></td></tr>
+        <tr><td>BadRequest: functions worker runtime</td><td>App setting <code>FUNCTIONS_WORKER_RUNTIME=python</code> mancante</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======== STEP 4 ======== -->
+<div class="card" id="step4">
+  <h2><span class="num">4</span> Deploy Webapp + Verify Static Site</h2>
+
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <ul>
+        <li>Storage Account <code>storder001</code> (da Step 2)</li>
+        <li>Cartella <code>webapp/</code> con <code>index.html</code>, <code>style.css</code>, <code>app.js</code></li>
+        <li>Contenitore statico <code>$web</code> (creato da Bicep)</li>
+      </ul>
+    </div>
+
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code># Upload dei file della webapp
+az storage blob upload-batch \
+  --account-name storder001 \
+  --auth-mode login \
+  --destination '$web' \
+  --source webapp/ \
+  --overwrite
+
+# Attendere 30-60s per propagazione DNS</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Output</h4>
+      <pre><code>Finished[################################] 3/3 files.
+index.html  ✅
+style.css   ✅
+app.js      ✅</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-verify">
+      <h4><span class="emoji">✅</span>Verify</h4>
+      <pre><code># URL della webapp
+PRIMARY_ENDPOINT=$(az storage account show \
+  --name storder001 \
+  --query "primaryEndpoints.web" \
+  --output tsv)
+
+echo "Webapp URL: $PRIMARY_ENDPOINT"
+# Apri nel browser o verifica con curl:
+curl -s "$PRIMARY_ENDPOINT" | head -5
+# Dovrebbe mostrare l'HTML di index.html</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>AuthenticationRequired</td><td>Usa <code>--auth-mode login</code> o <code>az login</code> prima</td></tr>
+        <tr><td>StorageAccountNotFound</td><td>Il nome <code>storder001</code> è sbagliato. Verifica con <code>az storage account list --output table</code></td></tr>
+        <tr><td>PublicAccessNotAllowed</td><td>Il Bicep abilita static website automaticamente. Verifica su Azure Portal → Storage account → Static website</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======== STEP 5 ======== -->
+<div class="card" id="step5">
+  <h2><span class="num">5</span> End-to-End Smoke Test</h2>
+
+  <h3>5.1 Invia un ordine</h3>
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <ul>
+        <li>Function App endpoint: <code>https://func-order-001.azurewebsites.net</code></li>
+        <li>Payload ordine valido (JSON)</li>
+      </ul>
+    </div>
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code>curl -X POST \
+  https://func-order-001.azurewebsites.net/api/submit_order \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerName": "Mario Rossi",
+    "customerPhone": "+351911234567",
+    "items": [{"itemId":"ITM-001","name":"Laptop","quantity":1,"unitPrice":1200}],
+    "total": 1200,
+    "tax": 276
+  }'</code></pre>
+    </div>
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Output</h4>
+      <pre><code>HTTP/1.1 202 Accepted
+
+{
+  "orderId": "ORD-0001-a1b2c3d4",
+  "displayId": 1,
+  "displayOrder": "ORD-0001",
+  "status": "submitted"
+}</code></pre>
+    </div>
+    <div class="ipo-item ipo-verify">
+      <h4><span class="emoji">✅</span>Verify</h4>
+      <p>Salva <code>orderId</code> — servirà per i passi successivi.</p>
+    </div>
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>404 Not Found</td><td>La Function App non è raggiungibile. Verifica il deploy (Step 3)</td></tr>
+        <tr><td>500 Internal Server Error</td><td>Controlla Application Insights o <code>func logs</code> per dettagli</td></tr>
+        <tr><td>503 Counter exhausted</td><td>Il contatore Cosmos DB ha fallito. Verifica RBAC</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>5.2 Polling dello stato</h3>
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <pre><code>ORDER_ID="ORD-0001-a1b2c3d4"</code></pre>
+    </div>
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code>curl -s \
+  "https://func-order-001.azurewebsites.net/api/status?orderId=$ORDER_ID" \
+  | jq .</code></pre>
+      <p class="muted">Ripeti ogni 5 secondi finché status non è terminale</p>
+    </div>
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Expected States</h4>
+      <div class="expected-json">{
+  "status": "pending_confirmation",
+  "secondsRemaining": 175,
+  "displayOrder": "ORD-0001",
+  "timeline": [
+    { "status": "submitted", "timestamp": "12:00:01" },
+    { "status": "validating", "timestamp": "12:00:02" },
+    { "status": "sms_sent", "timestamp": "12:00:05" },
+    { "status": "pending_confirmation", "timestamp": "12:00:05" }
+  ]
+}</div>
+    </div>
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>404 Order not found</td><td>L'orderId non esiste. Verifica sia stato creato (Step 5.1)</td></tr>
+        <tr><td>status: "expired"</td><td>Timeout di 3 minuti — crea un nuovo ordine e conferma più velocemente</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>5.3 Conferma l'ordine</h3>
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <pre><code>INSTANCE_ID="ORD-0001-a1b2c3d4"</code></pre>
+    </div>
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code>curl -X POST \
+  https://func-order-001.azurewebsites.net/api/confirm_handler \
+  -H "Content-Type: application/json" \
+  -d "{\"instance_id\": \"$INSTANCE_ID\"}"</code></pre>
+    </div>
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Output</h4>
+      <p><code>HTTP/1.1 200 OK — Order confirmed</code></p>
+      <p class="muted">Lo status passerà a <code>confirmed</code> → <code>processing</code> → <code>completed</code></p>
+    </div>
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>400 Missing instance_id</td><td>Payload JSON non contiene <code>instance_id</code></td></tr>
+        <tr><td>410 Gone</td><td>L'orchestrazione è già terminata (expired o completed)</td></tr>
+        <tr><td>404 Orchestration not found</td><td>instance_id inesistente o errato</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>5.4 Verifica stato finale</h3>
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-process" style="grid-column:1/-1;">
+      <h4><span class="emoji">⚙️</span>Poll fino a <code>completed</code></h4>
+      <pre><code># Loop di polling (Bash)
+while true; do
+  STATUS=$(curl -s "https://func-order-001.azurewebsites.net/api/status?orderId=$ORDER_ID" | jq -r .status)
+  echo "$(date +%H:%M:%S) — $STATUS"
+  [ "$STATUS" = "completed" ] && break
+  [ "$STATUS" = "expired" ] && break
+  sleep 3
+done</code></pre>
+    </div>
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Expected States (conferma)</h4>
+      <div class="expected-json">submitted
+validating
+sms_sent
+pending_confirmation    ← invoca confirm_handler qui
+confirmed
+processing
+completed              ← stato terminale ✅</div>
+    </div>
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>Expected States (timeout)</h4>
+      <div class="expected-json">submitted
+validating
+sms_sent
+pending_confirmation
+expired                ← stato terminale (dopo 180s)</div>
+    </div>
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Stuck States</h4>
+      <table class="error-table">
+        <tr><td>Stuck su "sms_sent"</td><td>L'evento BlobCreated non ha triggerato l'orchestrazione. Verifica Event Grid subscription</td></tr>
+        <tr><td>Stuck su "pending_confirmation"</td><td>Il timer DF non è scattato o il raise_event non è stato ricevuto</td></tr>
+        <tr><td>Status mai "completed"</td><td>La scrittura su Cosmos DB fallisce. Verifica RBAC: Cosmos DB Built-in Data Contributor</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======== STEP 6 ======== -->
+<div class="card" id="step6">
+  <h2><span class="num">6</span> Configure GitHub OIDC (One-Time Setup)</h2>
+  <p>Configurazione necessaria per eseguire la CI/CD pipeline da GitHub Actions.</p>
+
+  <div class="ipo-grid">
+    <div class="ipo-item ipo-input">
+      <h4><span class="emoji">📥</span>Input</h4>
+      <ul>
+        <li>GitHub repository: <code>Exercise-Event-Chain-Output-bind</code></li>
+        <li>Azure subscription ID</li>
+        <li>Azure AD Tenant ID</li>
+      </ul>
+    </div>
+
+    <div class="ipo-item ipo-process">
+      <h4><span class="emoji">⚙️</span>Process</h4>
+      <pre><code># 1. Crea App Registration
+CLIENT_ID=$(az ad app create \
+  --display-name "github-order-pipeline" \
+  --query appId -o tsv)
+
+# 2. Crea Service Principal
+az ad sp create --id $CLIENT_ID
+
+# 3. Assegna Contributor alla subscription
+az role assignment create \
+  --assignee $CLIENT_ID \
+  --role Contributor \
+  --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-orderprocessing-001
+
+# 4. Crea federated credential (GitHub Actions)
+#    Azure Portal → App Registration → Certificates & Secrets
+#    → Federated credentials → Add credential
+#    Scenario: GitHub Actions deploying to Azure
+#    Organization: (tuo-github-org)
+#    Repository: Exercise-Event-Chain-Output-bind
+#    Entity type: Environment → production</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-output">
+      <h4><span class="emoji">📤</span>GitHub Secrets da creare</h4>
+      <p>Repository → Settings → Secrets and variables → Actions → New repository secret:</p>
+      <pre><code>AZURE_CLIENT_ID:       (appId da step 1)
+AZURE_TENANT_ID:       (dal tenant Azure AD)
+AZURE_SUBSCRIPTION_ID: (subscription ID)</code></pre>
+    </div>
+
+    <div class="ipo-item ipo-error">
+      <h4><span class="emoji">⚠️</span>Common Errors</h4>
+      <table class="error-table">
+        <tr><td>Federated credential not found</td><td>L'entity type deve corrispondere: usa <code>Environment</code> con nome <code>production</code></td></tr>
+        <tr><td>403 — insufficient permissions</td><td>Il Service Principal non ha Contributor sul RG</td></tr>
+        <tr><td>404 — resource group not found</td><td>Esegui Step 1 prima di configurare OIDC</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======== TROUBLESHOOTING ======== -->
+<div class="card" id="troubleshooting">
+  <h2><span class="num" style="background:var(--red);">!</span> Troubleshooting Index</h2>
+  <table class="error-table">
+    <thead><tr><th>Error Message</th><th>Probable Cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>AuthorizationFailed</td><td>Utente/SP senza permessi</td><td>Assegna <code>Contributor</code> sul RG con <code>az role assignment create</code></td></tr>
+      <tr><td>No matches for sku 'Free'</td><td>Cosmos DB free tier già usato in questa sub</td><td>Usa un'altra subscription o elimina altri Cosmos free tier</td></tr>
+      <tr><td>StorageAccountAlreadyTaken</td><td>Nome storage già esistente globalmente</td><td>Cambia <code>suffix</code> in <code>parameters.json</code></td></tr>
+      <tr><td>Site not found (func)</td><td>Function App name errato</td><td><code>az functionapp list --output table</code> per vedere i nomi reali</td></tr>
+      <tr><td>BUILD FAILED</td><td>Oryx build remoto fallito</td><td><code>requirements.txt</code> deve essere nella root. Verifica dipendenze</td></tr>
+      <tr><td>404 on submit_order</td><td>Function App non raggiungibile</td><td>Verifica deploy funzioni (Step 3) e <code>func azure functionapp publish</code></td></tr>
+      <tr><td>503 Counter exhausted</td><td>Cosmos DB CAS fallito</td><td>Verifica RBAC: <code>Cosmos DB Built-in Data Contributor</code></td></tr>
+      <tr><td>500 on status polling</td><td>Cosmos DB read_item fallisce</td><td>Verifica la connessione: <code>COSMOS_DB_ACCOUNT_ENDPOINT</code> e MI</td></tr>
+      <tr><td>410 Gone on confirm</td><td>Orchestrazione già terminata</td><td>Crea un nuovo ordine e conferma entro 3 minuti</td></tr>
+      <tr><td>Pipeline stuck in lint</td><td>flake8/black fail su formattazione</td><td>Esegui <code>black src/</code> e <code>flake8 src/</code> localmente</td></tr>
+      <tr><td>Job not authorized</td><td>OIDC federated credential mancante</td><td>Segui Step 6: App Registration + federated credential</td></tr>
+      <tr><td>Read timed out (cosmos)</td><td>Cosmos DB emulator non in esecuzione</td><td>Avvia emulator: <code>azurite --silent</code> per locale</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ======== DEPLOY QUICK REFERENCE ======== -->
+<div class="card" id="quickref">
+  <h2><span class="num" style="background:var(--green);">⏱</span> Deploy Quick Reference</h2>
+  <pre><code># 1. Resource Group
+az group create --name rg-orderprocessing-001 --location westeurope
+
+# 2. Bicep (8 risorse + RBAC) — ~5 min
+az deployment group create \
+  --resource-group rg-orderprocessing-001 \
+  --template-file infra/main.bicep \
+  --parameters @infra/parameters.json
+
+# 3. Function App — ~2 min
+func azure functionapp publish func-order-001 --python
+
+# 4. Webapp — ~30s
+az storage blob upload-batch \
+  --account-name storder001 \
+  --auth-mode login \
+  --destination '$web' \
+  --source webapp/ \
+  --overwrite
+
+# 5. E2E Smoke Test
+ORDER_ID=$(curl -s -X POST \
+  https://func-order-001.azurewebsites.net/api/submit_order \
+  -H "Content-Type: application/json" \
+  -d '{"customerName":"Test","customerPhone":"+351911234567","items":[{"itemId":"ITM-001","name":"Laptop","quantity":1,"unitPrice":1200}],"total":1200,"tax":276}' | jq -r .orderId)
+echo "Order: $ORDER_ID"
+
+# Poll fino a pending_confirmation
+sleep 10
+curl -s "https://func-order-001.azurewebsites.net/api/status?orderId=$ORDER_ID" | jq .
+
+# Conferma
+curl -X POST \
+  https://func-order-001.azurewebsites.net/api/confirm_handler \
+  -H "Content-Type: application/json" \
+  -d "{\"instance_id\": \"$ORDER_ID\"}"
+
+# Poll fino a completed
+while true; do
+  STATUS=$(curl -s "https://func-order-001.azurewebsites.net/api/status?orderId=$ORDER_ID" | jq -r .status)
+  echo "$STATUS"
+  [ "$STATUS" = "completed" ] && break
+  [ "$STATUS" = "expired" ] && break
+  sleep 3
+done
+
+# Cleanup
+# az group delete --name rg-orderprocessing-001 --yes --no-wait</code></pre>
+</div>
+
+</div>
+
+<footer>
+  <p>ITS-ICT Piemonte — BAD 26, Cloud Services — Microsoft Azure</p>
+  <p>Event-Driven Order Processing Pipeline — Azure Deploy Guide — Giugno 2026</p>
+</footer>
+
+</body>
+</html>

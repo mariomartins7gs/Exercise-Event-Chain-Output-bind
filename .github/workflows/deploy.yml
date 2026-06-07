@@ -1,0 +1,149 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      suffix:
+        description: 'Deployment suffix'
+        default: '001'
+        type: string
+      skip-infra:
+        description: 'Skip Bicep deployment'
+        default: false
+        type: boolean
+
+env:
+  SUFFIX: ${{ inputs.suffix || vars.SUFFIX || '001' }}
+  PREFIX: ${{ vars.PREFIX || 'order' }}
+  AZURE_RG: rg-orderprocessing-${{ inputs.suffix || vars.SUFFIX || '001' }}
+  FUNC_APP_NAME: func-order-${{ inputs.suffix || vars.SUFFIX || '001' }}
+  STORAGE_ACCOUNT: storder${{ inputs.suffix || vars.SUFFIX || '001' }}
+  PYTHON_VERSION: '3.11'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install flake8 black
+      - run: flake8 src/
+      - run: black --check src/
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r requirements.txt
+      - run: pip install pytest pytest-cov pytest-asyncio
+      - run: pytest test/ --cov=src --cov-report=xml --junitxml=test-results.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: test-results.xml
+
+  build:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p deployment
+          cp -r src/ deployment/
+          cp host.json deployment/
+          cp requirements.txt deployment/
+      - run: |
+          cd deployment
+          zip -r ../function-app.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: function-app
+          path: function-app.zip
+          retention-days: 1
+
+  deploy-infra:
+    needs: build
+    if: github.ref == 'refs/heads/main' && !inputs.skip-infra
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Create or update resource group
+        run: |
+          az group create \
+            --name ${{ env.AZURE_RG }} \
+            --location westeurope \
+            --output none
+      - name: Deploy Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: ${{ env.AZURE_RG }}
+          template: infra/main.bicep
+          parameters: >
+            location=westeurope
+            suffix=${{ env.SUFFIX }}
+            prefix=${{ env.PREFIX }}
+          failOnStdErr: false
+
+  deploy-functions:
+    needs: [build, deploy-infra]
+    if: github.ref == 'refs/heads/main' && !cancelled()
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: function-app
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy Function App
+        run: |
+          az functionapp deploy \
+            --name ${{ env.FUNC_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RG }} \
+            --package function-app.zip \
+            --type zip
+
+  deploy-webapp:
+    needs: [build, deploy-infra]
+    if: github.ref == 'refs/heads/main' && !cancelled()
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Upload webapp to static site
+        run: |
+          az storage blob upload-batch \
+            --account-name ${{ env.STORAGE_ACCOUNT }} \
+            --auth-mode login \
+            --destination '$web' \
+            --source webapp/ \
+            --overwrite

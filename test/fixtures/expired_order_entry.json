@@ -1,0 +1,11 @@
+{
+    "PartitionKey": "ExpiredOrder",
+    "RowKey": "ORD-0042-a1b2c3d4",
+    "orderId": "ORD-0042-a1b2c3d4",
+    "displayOrder": "ORD-0042",
+    "customerName": "Maria Silva",
+    "customerPhone": "+351911234567",
+    "total": 61.00,
+    "expiresAt": "2026-06-06T12:03:00Z",
+    "reason": "Customer did not confirm within 3 minutes"
+}

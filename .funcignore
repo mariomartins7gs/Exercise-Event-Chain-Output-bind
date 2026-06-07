@@ -1,0 +1,12 @@
+.git*
+.gitignore
+.vscode
+local.settings.json
+.venv
+__pycache__
+*.pyc
+test/
+docs/
+infra/
+.github/
+pytest.ini

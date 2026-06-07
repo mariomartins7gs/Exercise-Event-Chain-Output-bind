@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITS-ICT Piemonte — BAD 26 — Event-Driven Order Processing Pipeline</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #1a1a2e;
+  --secondary: #0f172a;
+  --azure: #0078D4;
+  --azure-light: #e6f2fc;
+  --azure-dark: #005a9e;
+  --text: #1e293b;
+  --text-light: #475569;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --card-bg: #ffffff;
+  --body-bg: #f8fafc;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--body-bg);
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: #fff;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border-bottom: 4px solid var(--azure);
+}
+.hero-inner { max-width: 780px; margin: 0 auto; }
+.hero .institute {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.hero h2 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #cbd5e1;
+  margin-bottom: 1.5rem;
+}
+.hero .meta {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  flex-wrap: wrap;
+}
+.hero .meta span::before { content: "— "; }
+
+.wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  gap: 2rem;
+  padding: 2rem 1.5rem;
+}
+
+.toc {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 1.5rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+}
+.toc h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.toc ul { list-style: none; }
+.toc li { margin-bottom: 0.3rem; }
+.toc a {
+  display: block;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  text-decoration: none;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.toc a:hover, .toc a.active {
+  color: var(--azure);
+  border-left-color: var(--azure);
+  background: var(--azure-light);
+}
+
+main {
+  flex: 1;
+  min-width: 0;
+}
+
+section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+section h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--azure);
+}
+section h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 1.25rem 0 0.5rem;
+}
+section h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin: 1rem 0 0.25rem;
+}
+section p, section li {
+  font-size: 0.92rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+section ul, section ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+
+.lang-section {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  margin: 0.75rem 0;
+  border-left: 4px solid var(--azure);
+}
+.lang-section.lang-en { border-left-color: var(--blue); }
+.lang-section.lang-it { border-left-color: var(--green); }
+.lang-section h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.lang-section h3 .flag { margin-right: 0.4rem; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 700px) { .card-grid { grid-template-columns: 1fr; } }
+.card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  border-left: 4px solid var(--azure);
+}
+.card.card-originale { border-left-color: var(--red); }
+.card.card-decisioni { border-left-color: var(--green); }
+
+.table-wrapper { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 0.75rem 0;
+}
+thead th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+tbody td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:nth-child(even) { background: #f8fafc; }
+tbody tr:hover { background: var(--azure-light); }
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+
+.muted { color: var(--muted); font-size: 0.85rem; }
+
+/* ===== MERMAID — Hover Zoom + Click Modal ===== */
+.mermaid-container {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  overflow: hidden;
+  text-align: center;
+  cursor: zoom-in;
+  position: relative;
+  transition: box-shadow 0.2s;
+}
+.mermaid-container:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.25s ease;
+}
+.mermaid-container:hover svg {
+  transform: scale(1.6);
+  transform-origin: top left;
+}
+
+.mermaid-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  cursor: zoom-out;
+}
+.mermaid-modal.active {
+  display: flex;
+}
+.mermaid-modal .modal-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  cursor: default;
+}
+.mermaid-modal .modal-content svg {
+  width: 100%;
+  height: auto;
+}
+.mermaid-modal .modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.mermaid-modal .modal-close:hover { opacity: 1; }
+
+pre {
+  background: #0d1117;
+  color: #e3e8ee;
+  border-radius: 6px;
+  padding: 1rem;
+  font-size: 0.82rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.88em;
+  background: #e2e8f0;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+pre code { background: none; padding: 0; }
+pre ::selection { background: #264f78; color: #fff; }
+
+.phase-done { color: var(--green); font-weight: 600; }
+.phase-pending { color: var(--amber); font-weight: 600; }
+
+footer {
+  background: var(--primary);
+  color: #cbd5e1;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 860px) {
+  .wrapper { flex-direction: column; padding: 1rem; }
+  .toc { position: static; width: 100%; max-height: none; }
+  .toc ul { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .toc li { margin: 0; }
+  .toc a { border-left: none; border-bottom: 2px solid transparent; padding: 0.3rem 0.5rem; }
+  .toc a.active { border-bottom-color: var(--azure); }
+}
+
+@media print {
+  .toc { display: none; }
+  .wrapper { display: block; padding: 0; }
+  section { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  .hero { background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; }
+  .hero h1, .hero h2, .hero .meta, .hero .institute { color: #000 !important; }
+  .mermaid-container { cursor: default; }
+  .mermaid-container:hover svg { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="institute">ITS-ICT Piemonte — BAD 26</p>
+    <h1>Cloud Services — Microsoft Azure</h1>
+    <h2>Event-Driven Order Processing Pipeline con SMS Confirmation</h2>
+    <div class="meta">
+      <span>Prof. Laurianti Federico</span>
+      <span>Allievo: Mario Martins</span>
+      <span>Giugno 2026</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrapper">
+
+<nav class="toc" id="toc">
+  <h3>Indice / Index</h3>
+  <ul>
+    <li><a href="#stato-attuale">1. Project Resume / Stato Attuale</a></li>
+    <li><a href="#architettura">2. Architecture / Architettura</a></li>
+    <li><a href="#componenti">3. Components / Componenti</a></li>
+    <li><a href="#pipeline">4. Pipeline Timeline / Sequenza</a></li>
+    <li><a href="#decisioni">5. Decisions / Decisioni</a></li>
+    <li><a href="#contatore">6. Auto-Increment Counter / Contatore</a></li>
+    <li><a href="#status-tracking">7. Live Status Tracking</a></li>
+    <li><a href="#infrastruttura">8. Infrastructure / Infrastruttura</a></li>
+    <li><a href="#costi">9. Costs / Costi</a></li>
+    <li><a href="#cicd">10. CI/CD Pipeline</a></li>
+    <li><a href="#prossimi-passi">11. Next Steps / Prossimi Passi</a></li>
+    <li><a href="#esercizio">12. Student Guide / Guida Studente</a></li>
+    <li><a href="#risultati">13. SDD/TDD Results / Risultati</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- ============================================================ -->
+<section id="stato-attuale">
+  <h2>1. Project Resume &mdash; Stato Attuale</h2>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English</h3>
+    <p><strong>Event-driven</strong> order processing pipeline with SMS confirmation, built on Azure Functions Python v2.
+    Input from webapp &rarr; Blob Storage &rarr; Event Grid &rarr; Durable Functions orchestration (validate, SMS, race confirm vs timeout) &rarr; output to Cosmos DB or Table Storage.
+    Entire flow orchestrated with <strong>Human-in-the-Loop</strong> pattern (3-minute timeout).</p>
+  </div>
+
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano</h3>
+    <p>Pipeline <strong>event-driven</strong> per elaborazione ordini con conferma SMS, costruita su Azure Functions Python v2.
+    Input da webapp &rarr; Blob Storage &rarr; Event Grid &rarr; Durable Functions orchestration (validate, SMS, race confirm vs timeout) &rarr; output su Cosmos DB o Table Storage.
+    Intero flusso orchestrato con pattern <strong>Human-in-the-Loop</strong> (timeout 3 minuti).</p>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Architectural Decisions</h3>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Decisioni Architetturali</h3>
+  </div>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Decision</th><th>Choice</th><th>Rationale / Motivazione</th></tr></thead>
+    <tbody>
+      <tr><td>Orchestration</td><td><span class="badge badge-blue">Durable Functions</span></td><td>Canonical for <code>WaitForExternalEvent</code> + <code>CreateTimer</code> race with exact timeout</td></tr>
+      <tr><td>Counter ID</td><td><span class="badge badge-blue">Cosmos DB CAS (ETag)</span></td><td>Teaches optimistic concurrency; no additional service needed</td></tr>
+      <tr><td>SMS</td><td><span class="badge badge-blue">Azure Communication Services</span></td><td>Free tier (200 SMS/mo); switchable to simulated via env var</td></tr>
+      <tr><td>Auth</td><td><span class="badge badge-blue">Managed Identity + RBAC</span></td><td>Zero connection strings; best practice; teaches Entra ID</td></tr>
+      <tr><td>Event source</td><td><span class="badge badge-blue">Blob Storage System Topic</span></td><td>Simplest for classroom: upload file &rarr; trigger</td></tr>
+      <tr><td>IaC</td><td><span class="badge badge-blue">Bicep</span></td><td>Azure-native, readable, single file deployment</td></tr>
+      <tr><td>Methodology</td><td><span class="badge badge-blue">SDD + TDD</span></td><td>Spec-first &rarr; test-second &rarr; code-third; KPI-gated quality</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Current Status</h3>
+    <ul>
+      <li><strong>✅ Backend core</strong> — 5 Python modules implemented (models, counter, activities, orchestrator, function_app)</li>
+      <li><strong>✅ Test suite</strong> — 49 tests, 97% coverage, all passing</li>
+      <li><strong>✅ Documentation</strong> — 11 design docs + 5 ADRs + methodology framework (SDD/KPI)</li>
+      <li><strong>✅ Webapp</strong> — order form + live dashboard (HTML/CSS/JS)</li>
+      <li><strong>✅ Bicep infra</strong> — 8 resources + RBAC (6 modules)</li>
+      <li><strong>✅ CI/CD</strong> — GitHub Actions pipeline (6 jobs)</li>
+    </ul>
+  </div>
+
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Stato di Implementazione</h3>
+    <ul>
+      <li><strong>✅ Backend core</strong> — 5 moduli Python implementati (models, counter, activities, orchestrator, function_app)</li>
+      <li><strong>✅ Test suite</strong> — 49 test, 97% copertura, tutti superati</li>
+      <li><strong>✅ Documentazione</strong> — 11 documenti + 5 ADR + framework metodologico (SDD/KPI)</li>
+      <li><strong>✅ Webapp</strong> — form ordini + dashboard live (HTML/CSS/JS)</li>
+      <li><strong>✅ Infrastruttura Bicep</strong> — 8 risorse + RBAC (6 moduli)</li>
+      <li><strong>✅ CI/CD</strong> — Pipeline GitHub Actions (6 job)</li>
+    </ul>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Next Steps</h3>
+    <ol>
+      <li>Deploy to Azure for Students subscription (<code>az deployment group create</code>)</li>
+      <li>Configure GitHub OIDC for CI/CD</li>
+      <li>End-to-end smoke test</li>
+    </ol>
+  </div>
+
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Prossimi Passi</h3>
+    <ol>
+      <li>Deploy su Azure for Students (<code>az deployment group create</code>)</li>
+      <li>Configurare OIDC per GitHub Actions</li>
+      <li>Test end-to-end</li>
+    </ol>
+  </div>
+
+  <h3>Repository Structure / Struttura Repository</h3>
+  <pre><code class="language-plaintext">Exercise-Event-Chain-Output-bind/
+&#9500;&#9472; src/                       # 5 Python modules (moduli)
+&#9500;&#9472; webapp/                    # index.html + style.css + app.js
+&#9500;&#9472; infra/                     # main.bicep + 6 modules + params
+&#9500;&#9472; test/                      # 49 tests, 97% coverage
+&#9500;&#9472; docs/                      # 11 docs + 5 ADRs
+&#9500;&#9472; .github/workflows/deploy.yml
+&#9500;&#9472; host.json
+&#9500;&#9472; local.settings.json
+&#9500;&#9472; requirements.txt
+&#9492;&#9472; pytest.ini</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="architettura">
+  <h2>2. System Architecture / Architettura del Sistema</h2>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English</h3>
+    <p>The system implements an event-driven order processing pipeline with SMS confirmation.
+    The architecture follows the <strong>Human-in-the-Loop</strong> pattern with a 3-minute confirmation timeout.
+    Click on the diagram to enlarge it.</p>
+  </div>
+
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano</h3>
+    <p>Il sistema implementa una pipeline event-driven per l'elaborazione di ordini con conferma SMS.
+    L'architettura segue il pattern <strong>Human-in-the-Loop</strong> con un timeout di 3 minuti per la conferma.
+    Clicca sul diagramma per ingrandirlo.</p>
+  </div>
+
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+flowchart LR
+    subgraph INPUT["&#128229; INPUT — Webapp Studente"]
+        A1["Studente apre form\n(order-form.html)"] --> A2["Inserisce: nome, telefono,\nitems, indirizzo"]
+        A2 --> A3["POST /api/submit_order\n(HTTP Function)"]
+        A3 --> A4["Ottiene displayId dal contatore\n(Cosmos DB CAS — optimistic concurrency)"]
+        A4 --> A5["Scrive order.json su Blob\ncontainer 'orders-inbox'"]
+    end
+
+    subgraph TRIGGER["&#9889; EVENT GRID"]
+        B1["BlobCreated event\n(scatta automaticamente)"] --> B2["Event Grid System Topic\n(routing alla Function App)"]
+    end
+
+    subgraph PROCESS["&#9881;&#65039; PROCESSING — Function App"]
+        C1["order_validator\n(EventGridTrigger)"] --> C2["Legge blob content\nEstrae payload ordine"]
+        C2 --> C3["Avvia DF Orchestration\nclient.start_new()"]
+
+        subgraph DURABLE["&#9203; Orchestrazione Durable (finestra 3 min)"]
+            D1["validate_order\n(Pydantic validation)"] --> D2["get_next_counter\n(Cosmos DB CAS)"]
+            D2 --> D3["write_status_update\n(stato: validating)"]
+            D3 --> D4["send_sms\n(Azure Communication Services)"]
+            D4 --> D5["write_status_update\n(stato: sms_sent)"]
+            D5 --> D6["write_status_update\n(stato: pending_confirmation)"]
+            D6 --> D7{"RACE: Timer(180s)\nvs\nWaitForExternalEvent?"}
+            D7 -->|"&#128241; CONFERMATO\n(entro 3 min)"| D8["process_order\n(arricchimento dati)"]
+            D8 --> D9["write_status_update\n(stato: confirmed)"]
+            D9 --> D10["write_to_cosmos\n(stato: Completed)"]
+            D7 -->|"&#9203; TIMEOUT\n(3 min scaduti)"| D11["write_status_update\n(stato: expired)"]
+            D11 --> D12["log_expired_order\n(Table Storage)"]
+        end
+
+        C3 --> D1
+
+        subgraph CALLBACK["&#128222; Callback SMS"]
+            E1["Studente riceve SMS:\n'Conferma ORD-0042\nsu /api/confirm_handler'"] --> E2["Studente clicca link\no POST via webapp"]
+            E2 --> E3["confirm_handler\n(HTTP Trigger)"]
+            E3 --> E4["Valida instance_id\nControlla stato orchestrazione"]
+            E4 --> E5["RaiseEvent('Confirmed')\nall'istanza orchestrator"]
+            E5 --> D7
+        end
+
+        subgraph STATUS["&#128200; Live Status Webapp"]
+            F1["Webapp polla ogni 5s\nGET /api/status?orderId=X"] --> F2["HTTP Trigger legge\nCosmos DB (container OrderStatus)"]
+            F2 --> F3["Restituisce timeline,\nstato corrente, countdown"]
+            F3 --> F4["Render dashboard\n(stepper verticale, timer, barra)"]
+        end
+    end
+
+    subgraph OUTPUT["&#128228; OUTPUT"]
+        O1["Cosmos DB\ncontainer: Orders\ndocumenti con stato: Completed"]
+        O2["Cosmos DB\ncontainer: OrderStatus\ndocumenti timeline"]
+        O3["Table Storage\nExpiredOrders\nstato: NotConfirmed"]
+        O4["Application Insights\nTracce orchestrazione completi"]
+    end
+
+    D10 --> O1
+    D12 --> O3
+    D1 -.->|"telemetry"| O4
+    D4 -.-> O4
+    D7 -.-> O4
+    F2 -.-> O2
+
+    style A1 fill:#dbeafe,stroke:#2563eb
+    style A3 fill:#dbeafe,stroke:#2563eb
+    style B1 fill:#fef3c7,stroke:#d97706
+    style C1 fill:#d1fae5,stroke:#059669
+    style D7 fill:#fee2e2,stroke:#dc2626
+    style O1 fill:#f3e8ff,stroke:#9333ea
+    style O3 fill:#f3e8ff,stroke:#9333ea
+    </div>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Confirmed Path Flow</h3>
+    <ol>
+      <li>Webapp POST &rarr; <code>submit_order</code></li>
+      <li>&rarr; Cosmos DB: <code>counter.get_next_id()</code> &rarr; displayId=42</li>
+      <li>&rarr; Blob: <code>orders-inbox/ORD-0042.json</code></li>
+      <li>&rarr; Event Grid: BlobCreated</li>
+      <li>&rarr; <code>order_validator</code> reads the blob</li>
+      <li>&rarr; DF orchestration start (instance_id = ORD-0042-a1b2c3d4)</li>
+      <li>&rarr; <code>validate_order</code> (Pydantic)</li>
+      <li>&rarr; <code>get_next_counter</code> (CAS with retry)</li>
+      <li>&rarr; <code>write_status_update</code> (validating)</li>
+      <li>&rarr; <code>send_sms</code> (ACS)</li>
+      <li>&rarr; <code>write_status_update</code> (sms_sent)</li>
+      <li>&rarr; <code>write_status_update</code> (pending_confirmation, expiresAt)</li>
+      <li>&rarr; <strong>RACE</strong>: Timer(180s) vs WaitForExternalEvent</li>
+      <li>&rarr; Student clicks SMS link &rarr; POST /api/confirm_handler</li>
+      <li>&rarr; RaiseEvent("Confirmed") &rarr; confirmed branch wins</li>
+      <li>&rarr; <code>process_order</code> (enrichment)</li>
+      <li>&rarr; <code>write_status_update</code> (confirmed)</li>
+      <li>&rarr; <code>write_to_cosmos</code> (Orders container)</li>
+      <li>&rarr; Webapp polls GET /api/status &rarr; sees "completed"</li>
+    </ol>
+  </div>
+
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Flusso Confermato</h3>
+    <ol>
+      <li>Webapp POST &rarr; <code>submit_order</code></li>
+      <li>&rarr; Cosmos DB: <code>counter.get_next_id()</code> &rarr; displayId=42</li>
+      <li>&rarr; Blob: <code>orders-inbox/ORD-0042.json</code></li>
+      <li>&rarr; Event Grid: BlobCreated</li>
+      <li>&rarr; <code>order_validator</code> legge il blob</li>
+      <li>&rarr; DF orchestration start (instance_id = ORD-0042-a1b2c3d4)</li>
+      <li>&rarr; <code>validate_order</code> (Pydantic)</li>
+      <li>&rarr; <code>get_next_counter</code> (CAS con retry)</li>
+      <li>&rarr; <code>write_status_update</code> (validating)</li>
+      <li>&rarr; <code>send_sms</code> (ACS)</li>
+      <li>&rarr; <code>write_status_update</code> (sms_sent)</li>
+      <li>&rarr; <code>write_status_update</code> (pending_confirmation, expiresAt)</li>
+      <li>&rarr; <strong>RACE</strong>: Timer(180s) vs WaitForExternalEvent</li>
+      <li>&rarr; Studente clicca link SMS &rarr; POST /api/confirm_handler</li>
+      <li>&rarr; RaiseEvent("Confirmed") &rarr; vince ramo conferma</li>
+      <li>&rarr; <code>process_order</code> (arricchimento)</li>
+      <li>&rarr; <code>write_status_update</code> (confirmed)</li>
+      <li>&rarr; <code>write_to_cosmos</code> (container Orders)</li>
+      <li>&rarr; Webapp polla GET /api/status &rarr; vede "completed"</li>
+    </ol>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Expired Path Flow</h3>
+    <p>Identical up to step 13. Then:</p>
+    <ol start="14">
+      <li>&rarr; Timer expires (3 min)</li>
+      <li>&rarr; <code>write_status_update</code> (expired)</li>
+      <li>&rarr; <code>log_expired_order</code> (Table Storage: ExpiredOrders)</li>
+      <li>&rarr; Webapp polls GET /api/status &rarr; sees "expired"</li>
+    </ol>
+  </div>
+
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Flusso Expirato</h3>
+    <p>Identico fino al punto 13. Poi:</p>
+    <ol start="14">
+      <li>&rarr; Timer scatta (3 min)</li>
+      <li>&rarr; <code>write_status_update</code> (expired)</li>
+      <li>&rarr; <code>log_expired_order</code> (Table Storage: ExpiredOrders)</li>
+      <li>&rarr; Webapp polla GET /api/status &rarr; vede "expired"</li>
+    </ol>
+  </div>
+
+  <h3>Status State Machine / Macchina a Stati</h3>
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> submitted: Webapp POST
+    submitted --> validating: validate_order
+    validating --> sms_sent: get_next_counter
+    sms_sent --> pending_confirmation: send_sms
+    pending_confirmation --> confirmed: Student clicks link
+    pending_confirmation --> expired: Timer(180s)
+    confirmed --> processing: process_order
+    processing --> completed: write_to_cosmos
+    expired --> [*]
+    completed --> [*]
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="componenti">
+  <h2>3. System Components / Componenti del Sistema</h2>
+
+  <div class="table-wrapper">
+  <table>
+    <thead>
+      <tr><th>Component / Componente</th><th>Type / Tipo</th><th>Trigger</th><th>Responsibility / Responsabilit&agrave;</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>submit_order</code></td><td>HTTP Trigger</td><td><code>POST /api/submit_order</code></td><td>Validate payload, get counter ID, write blob, return tracking</td></tr>
+      <tr><td><code>order_validator</code></td><td>EventGrid Trigger</td><td><code>BlobCreated</code> on <code>orders-inbox</code></td><td>Read blob, start DF orchestration</td></tr>
+      <tr><td><code>order_workflow</code></td><td>DF Orchestrator</td><td><code>start_new_orchestration</code></td><td>Orchestrate 7 activities with timer/event race</td></tr>
+      <tr><td><code>confirm_handler</code></td><td>HTTP Trigger</td><td><code>POST /api/confirm_handler</code></td><td>Raise "Confirmed" event to orchestrator</td></tr>
+      <tr><td><code>get_order_status</code></td><td>HTTP Trigger</td><td><code>GET /api/status</code></td><td>Read status from Cosmos DB, return timeline + countdown</td></tr>
+      <tr><td><code>validate_order</code></td><td>Activity</td><td>Called by orchestrator</td><td>Pydantic schema validation</td></tr>
+      <tr><td><code>get_next_counter</code></td><td>Activity</td><td>Called by orchestrator</td><td>Atomic counter increment (CAS)</td></tr>
+      <tr><td><code>send_sms</code></td><td>Activity</td><td>Called by orchestrator</td><td>Send SMS via ACS (or simulated)</td></tr>
+      <tr><td><code>write_status_update</code></td><td>Activity</td><td>Called by orchestrator</td><td>Persist timeline entry to Cosmos DB</td></tr>
+      <tr><td><code>process_order</code></td><td>Activity</td><td>Called by orchestrator</td><td>Enrich with status, timestamps, totals</td></tr>
+      <tr><td><code>write_to_cosmos</code></td><td>Activity</td><td>Called by orchestrator</td><td>Write final order document</td></tr>
+      <tr><td><code>log_expired_order</code></td><td>Activity</td><td>Called by orchestrator</td><td>Write to Table Storage with NotConfirmed</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="pipeline">
+  <h2>4. Pipeline Timeline / Sequenza Temporale</h2>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English</h3>
+    <p>Sequence diagram showing the interaction between all components in the nominal case (confirmation received). Click to enlarge.</p>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano</h3>
+    <p>Diagramma di sequenza che mostra l'interazione tra tutti i componenti nel caso nominale (conferma ricevuta). Clicca per ingrandire.</p>
+  </div>
+
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+sequenceDiagram
+    participant W as Webapp
+    participant H1 as submit_order HTTP
+    participant B as Blob Storage
+    participant EG as Event Grid
+    participant F as Function App
+    participant O as DF Orchestrator
+    participant A as Activities
+    participant C as Cosmos DB
+    participant T as Table Storage
+    participant S as ACS SMS
+
+    W->>H1: POST /api/submit_order
+    H1->>C: counter.get_next_id() (CAS)
+    C-->>H1: displayId=42, displayOrder=ORD-0042
+    H1->>B: upload ORD-0042.json
+    H1-->>W: 202 Accepted + tracking info
+    B->>EG: BlobCreated event
+    EG->>F: Trigger order_validator
+    F->>O: start_new_orchestration(input)
+    O->>A: validate_order
+    A-->>O: validated dict
+    O->>A: get_next_counter
+    A-->>O: {displayId, displayOrder, instanceId}
+    O->>A: write_status_update(validating)
+    O->>A: send_sms
+    A->>S: SMS sent
+    S-->>A: messageId
+    O->>A: write_status_update(sms_sent)
+    O->>A: write_status_update(pending_confirmation)
+    Note over O: RACE: Timer(180s) vs Event
+    W->>F: POST /api/confirm_handler
+    F->>O: RaiseEvent("Confirmed")
+    O->>A: process_order
+    O->>A: write_status_update(confirmed)
+    O->>A: write_to_cosmos
+    A->>C: upsert order document
+    O-->>F: return {status: completed}
+    loop Polling every 5s
+        W->>H1: GET /api/status?orderId=X
+        H1->>C: read status document
+        C-->>H1: status: completed
+        H1-->>W: completed
+    end
+    Note over W: Polling stops
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="decisioni">
+  <h2>5. Technical Decisions / Decisioni Tecniche</h2>
+
+  <div class="table-wrapper">
+  <table>
+    <thead>
+      <tr><th>Decision / Decisione</th><th>Chosen / Scelta</th><th>Alternative</th><th>Rationale / Motivazione</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Orchestration</strong></td>
+        <td><span class="badge badge-green">Durable Functions</span></td>
+        <td>TimerTrigger + polling on table</td>
+        <td>Canonical pattern for <code>WaitForExternalEvent</code> + <code>CreateTimer</code>. Exact timeout, zero race condition, checkpoint/replay built-in.</td>
+      </tr>
+      <tr>
+        <td><strong>Counter ID</strong></td>
+        <td><span class="badge badge-green">Cosmos DB CAS (ETag)</span></td>
+        <td>Durable Entity, Redis INCR</td>
+        <td>Teaches optimistic concurrency. No new service (Cosmos already used). Retry with exponential backoff.</td>
+      </tr>
+      <tr>
+        <td><strong>SMS</strong></td>
+        <td><span class="badge badge-green">Azure Communication Services</span></td>
+        <td>Twilio, pure simulated</td>
+        <td>Azure-native, free tier (200 SMS/mo). <code>SMS_PROVIDER</code> env var allows local simulated development.</td>
+      </tr>
+      <tr>
+        <td><strong>Auth</strong></td>
+        <td><span class="badge badge-green">Managed Identity + RBAC</span></td>
+        <td>Connection strings</td>
+        <td>Security best practice. Zero secrets to manage. Teaches Entra ID + RBAC. Automatic credential rotation.</td>
+      </tr>
+      <tr>
+        <td><strong>Event Source</strong></td>
+        <td><span class="badge badge-green">System Topic (Blob Storage)</span></td>
+        <td>Custom Topic</td>
+        <td>Simplest for students: upload file &rarr; trigger. No external publisher to configure.</td>
+      </tr>
+      <tr>
+        <td><strong>Infrastructure as Code</strong></td>
+        <td><span class="badge badge-green">Bicep</span></td>
+        <td>Terraform, ARM JSON, manual</td>
+        <td>Azure-native, readable syntax. Native VS Code integration. Single file deployment.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Architecture Decision Records (ADR)</h3>
+  <p>Each decision is documented as an ADR in <code>docs/adr/</code>:</p>
+  <ul>
+    <li><strong>ADR-001</strong>: Durable Functions for orchestration</li>
+    <li><strong>ADR-002</strong>: Optimistic Concurrency (Cosmos DB CAS) for counter</li>
+    <li><strong>ADR-003</strong>: Managed Identity + RBAC (no connection strings)</li>
+    <li><strong>ADR-004</strong>: Cosmos DB for order state + tracking</li>
+    <li><strong>ADR-005</strong>: Azure Communication Services for SMS</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="contatore">
+  <h2>6. Auto-Increment Counter / Contatore (Optimistic Concurrency)</h2>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; The Problem</h3>
+    <p>In a distributed environment with multiple Function instances, a simple <code>counter += 1</code> causes <strong>race conditions</strong>:</p>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Il Problema</h3>
+    <p>In un ambiente distribuito con pi&ugrave; istanze della Function, un semplice <code>counter += 1</code> causa <strong>race condition</strong>:</p>
+  </div>
+
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+sequenceDiagram
+    participant A as Instance A
+    participant B as Instance B
+    participant DB as Cosmos DB
+
+    A->>DB: read('orderCounter')
+    B->>DB: read('orderCounter')
+    DB-->>A: {currentValue: 42}
+    DB-->>B: {currentValue: 42}
+    Note over A,B: BOTH read 42!
+    A->>A: newValue = 43
+    B->>B: newValue = 43
+    A->>DB: write({currentValue: 43})
+    B->>DB: write({currentValue: 43})
+    Note over A,B: BOTH write 43 &rarr; DUPLICATE!
+    </div>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Solution: Compare-And-Swap with ETag</h3>
+    <p>Cosmos DB assigns a unique <code>_etag</code> to each document, changing on every write.
+    Writes are conditional: <em>"write only if ETag hasn't changed"</em>.</p>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Soluzione: Compare-And-Swap con ETag</h3>
+    <p>Cosmos DB assegna un <code>_etag</code> univoco a ogni documento, che cambia a ogni scrittura.
+    La scrittura viene condizionata: <em>"scrivi solo se l'ETag non &egrave; cambiato"</em>.</p>
+  </div>
+
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+sequenceDiagram
+    participant A as Instance A
+    participant B as Instance B
+    participant DB as Cosmos DB
+
+    A->>DB: read('orderCounter')
+    B->>DB: read('orderCounter')
+    DB-->>A: {v:42, _etag:"a"}
+    DB-->>B: {v:42, _etag:"a"}
+    A->>A: newValue = 43
+    B->>B: newValue = 43
+    A->>DB: replace({v:43}, etag="a")
+    DB-->>A: OK (v:43, _etag:"b")
+    B->>DB: replace({v:43}, etag="a")
+    DB-->>B: 412 PRECONDITION FAILED (etag changed!)
+    Note over B: RETRY: re-read (v:43, etag:"b")
+    B->>B: newValue = 44
+    B->>DB: replace({v:44}, etag="b")
+    DB-->>B: OK (v:44, _etag:"c")
+    Note over A,B: Instance A &rarr; displayId=43, Instance B &rarr; displayId=44. OK!
+    </div>
+  </div>
+
+  <h3>Implementation / Implementazione</h3>
+  <pre><code class="language-python">class OrderCounter:
+    def __init__(self, container, max_retries: int = 3):
+        self.container = container
+        self.max_retries = max_retries
+
+    async def get_next_id(self) -> dict:
+        for attempt in range(self.max_retries + 1):
+            try:
+                counter = await self.container.read_item(
+                    item="orderCounter", partition_key="counter"
+                )
+                new_value = counter.get("currentValue", 0) + 1
+                await self.container.replace_item(
+                    item=counter,
+                    body={**counter, "currentValue": new_value},
+                    etag=counter["_etag"],
+                    match_condition="IfNotModified",
+                )
+                return {
+                    "displayId": new_value,
+                    "displayOrder": f"ORD-{new_value:04d}",
+                    "instanceId": f"ORD-{new_value:04d}-{uuid4().hex[:8]}"
+                }
+            except exceptions.CosmosResourceNotFoundError:
+                await self.container.create_item(
+                    body={"id": "orderCounter", "partitionKey": "counter", "currentValue": 0}
+                )
+                continue
+            except exceptions.CosmosAccessConditionFailedError:
+                if attempt == self.max_retries:
+                    raise CounterConflictError("Max retries exceeded")
+                await asyncio.sleep(0.1 * (2 ** attempt))
+                continue</code></pre>
+
+  <h3>Display ID Format / Formato</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Counter Value</th><th><code>displayId</code></th><th><code>displayOrder</code></th><th><code>instanceId</code></th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>1</td><td><code>ORD-0001</code></td><td><code>ORD-0001-a1b2c3d4</code></td></tr>
+      <tr><td>42</td><td>42</td><td><code>ORD-0042</code></td><td><code>ORD-0042-e5f6g7h8</code></td></tr>
+      <tr><td>9999</td><td>9999</td><td><code>ORD-9999</code></td><td><code>ORD-9999-i9j0k1l2</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Propagation Through Pipeline</h3>
+    <p>The <code>displayOrder</code> traverses every component:</p>
+    <ul>
+      <li><strong>Webapp</strong>: shown in form and dashboard</li>
+      <li><strong>Blob</strong>: filename = <code>ORD-0042.json</code></li>
+      <li><strong>SMS</strong>: "Confirm ORD-0042 at /api/confirm_handler..."</li>
+      <li><strong>Cosmos DB</strong>: <code>displayOrder</code> field in document</li>
+      <li><strong>Table Storage</strong>: <code>displayOrder</code> in expired entry</li>
+      <li><strong>API Status</strong>: included in every poll response</li>
+    </ul>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Propagazione nella Pipeline</h3>
+    <ul>
+      <li><strong>Webapp</strong>: mostrato nel form e nella dashboard</li>
+      <li><strong>Blob</strong>: nome file = <code>ORD-0042.json</code></li>
+      <li><strong>SMS</strong>: "Conferma ORD-0042 su /api/confirm_handler..."</li>
+      <li><strong>Cosmos DB</strong>: campo <code>displayOrder</code> nel documento</li>
+      <li><strong>Table Storage</strong>: campo <code>displayOrder</code> nell'entry expired</li>
+      <li><strong>API Status</strong>: incluso in ogni risposta di polling</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="status-tracking">
+  <h2>7. Live Status Tracking</h2>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Polling Architecture</h3>
+    <p>The webapp monitors order status via polling every 5 seconds:</p>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Architettura di Polling</h3>
+    <p>La webapp monitora lo stato dell'ordine tramite polling ogni 5 secondi:</p>
+  </div>
+
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+sequenceDiagram
+    participant W as Webapp
+    participant S as GET /api/status
+    participant C as Cosmos DB
+
+    loop Every 5s
+        W->>S: GET /api/status?orderId=ORD-0042-a1b2c3d4
+        S->>C: read_item('ORD-0042-a1b2c3d4')
+        C-->>S: status document with timeline
+        S->>W: {status, timeline, secondsRemaining}
+        W->>W: renderStatus(data)
+        Note over W: Terminal state? (completed/expired) &rarr; stop
+    end
+    </div>
+  </div>
+
+  <h3>States and Rendering / Stati e Rendering</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>State / Stato</th><th>Icon</th><th>Badge</th><th>Progress Bar</th><th>User Message / Messaggio</th></tr></thead>
+    <tbody>
+      <tr><td><code>submitted</code></td><td>&#10004;&#65039;</td><td><span class="badge badge-blue">Submitted / Inviato</span></td><td>Indeterminate</td><td>Order received / Ordine ricevuto</td></tr>
+      <tr><td><code>validating</code></td><td>&#128269;</td><td><span class="badge badge-blue">Validating / Validazione</span></td><td>Indeterminate</td><td>Validating data... / Validazione in corso...</td></tr>
+      <tr><td><code>sms_sent</code></td><td>&#128241;</td><td><span class="badge badge-amber">SMS Sent / SMS Inviato</span></td><td>100% (wait)</td><td>SMS sent! Check your phone / SMS inviato! Controlla il telefono</td></tr>
+      <tr><td><code>pending_confirmation</code></td><td>&#9203;</td><td><span class="badge badge-amber">Awaiting / In Attesa</span></td><td>Countdown (76%)</td><td>Waiting for confirmation... / In attesa di conferma...</td></tr>
+      <tr><td><code>confirmed</code></td><td>&#10004;&#65039;</td><td><span class="badge badge-green">Confirmed / Confermato</span></td><td>100%</td><td>Order confirmed! Processing... / Ordine confermato! Elaborazione...</td></tr>
+      <tr><td><code>processing</code></td><td>&#9881;&#65039;</td><td><span class="badge badge-green">Processing / Elaborazione</span></td><td>Indeterminate</td><td>Processing order... / Elaborazione ordine in corso...</td></tr>
+      <tr><td><code>completed</code></td><td>&#127881;</td><td><span class="badge badge-green">Completed / Completato</span></td><td>100%</td><td>Order completed successfully! / Ordine completato con successo!</td></tr>
+      <tr><td><code>expired</code></td><td>&#10060;</td><td><span class="badge badge-red">Expired / Scaduto</span></td><td>100% (locked)</td><td>Confirmation not received &mdash; order NOT processed / Conferma non ricevuta &mdash; ordine NON processato</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Server-side Countdown / Countdown lato server</h3>
+  <pre><code class="language-python"># In get_order_status
+if doc.get("status") == "pending_confirmation" and doc.get("expiresAt"):
+    expires = datetime.fromisoformat(doc["expiresAt"].replace("Z", "+00:00"))
+    now = datetime.now(timezone.utc)
+    seconds_remaining = max(0, int((expires - now).total_seconds()))</code></pre>
+
+  <p>The countdown is calculated <strong>server-side</strong> (not client) to avoid clock drift.</p>
+  <p>Il conteggio &egrave; calcolato <strong>lato server</strong> (non client) per evitare drift di orologio.</p>
+
+  <h3>Cosmos DB Status Document Structure / Struttura Documento</h3>
+  <pre><code class="language-json">{
+    "id": "ORD-0042-a1b2c3d4",
+    "orderId": "ORD-0042-a1b2c3d4",
+    "displayId": 42,
+    "displayOrder": "ORD-0042",
+    "status": "pending_confirmation",
+    "expiresAt": "2026-06-06T12:03:00Z",
+    "lastUpdatedAt": "2026-06-06T12:00:05Z",
+    "timeline": [
+        { "status": "submitted",  "timestamp": "12:00:01", "details": "..." },
+        { "status": "validating", "timestamp": "12:00:02", "details": "..." },
+        { "status": "sms_sent",   "timestamp": "12:00:05", "details": "..." },
+        { "status": "pending_confirmation", "timestamp": "12:00:05", "details": "..." }
+    ]
+}</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="infrastruttura">
+  <h2>8. Azure Infrastructure / Infrastruttura Azure</h2>
+
+  <h3>Resources (single Resource Group) / Risorse (unico RG)</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>#</th><th>Resource / Risorsa</th><th>Bicep Module</th><th>SKU / Tier</th><th>Purpose / Scopo</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Storage Account</td><td><code>storage.bicep</code></td><td>Standard_LRS</td><td>Blob (orders-inbox + $web), Table (ExpiredOrders)</td></tr>
+      <tr><td>2</td><td>Cosmos DB Account</td><td><code>cosmos.bicep</code></td><td>Free Tier</td><td>3 containers: Orders, OrderStatus, Counter</td></tr>
+      <tr><td>3</td><td>App Service Plan</td><td><code>functionapp.bicep</code></td><td>Y1 (Consumption Linux)</td><td>Host for Function App Python 3.11</td></tr>
+      <tr><td>4</td><td>Function App</td><td><code>functionapp.bicep</code></td><td>Consumption (Y1)</td><td>5 triggers + DF orchestrator</td></tr>
+      <tr><td>5</td><td>Application Insights</td><td><code>functionapp.bicep</code></td><td>Basic</td><td>Telemetry, distributed tracing</td></tr>
+      <tr><td>6</td><td>Event Grid System Topic</td><td><code>eventgrid.bicep</code></td><td>Standard</td><td>Routing BlobCreated &rarr; Function</td></tr>
+      <tr><td>7</td><td>ACS (Communication Services)</td><td><code>acs.bicep</code></td><td>Free Tier</td><td>SMS delivery (200/mo free)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>RBAC Role Assignments / Assegnazioni Ruoli</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Identity / Identit&agrave;</th><th>Scope</th><th>Role / Ruolo</th><th>Module / Modulo</th></tr></thead>
+    <tbody>
+      <tr><td>Function App (System MI)</td><td>Storage Account</td><td><code>Storage Blob Data Contributor</code></td><td><code>rbac.bicep</code></td></tr>
+      <tr><td>Function App (System MI)</td><td>Storage Account</td><td><code>Storage Table Data Contributor</code></td><td><code>rbac.bicep</code></td></tr>
+      <tr><td>Function App (System MI)</td><td>Cosmos DB Account</td><td><code>Cosmos DB Built-in Data Contributor</code></td><td><code>rbac.bicep</code></td></tr>
+      <tr><td>Function App (System MI)</td><td>ACS</td><td><code>Contributor</code></td><td><code>rbac.bicep</code></td></tr>
+      <tr><td>Function App (System MI)</td><td>App Insights</td><td><code>Monitoring Metrics Publisher</code></td><td><code>functionapp.bicep</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Bicep Structure / Struttura Bicep</h3>
+  <pre><code class="language-plaintext">infra/
+&#9500;&#9472; main.bicep              # Orchestrator &rarr; deploy order: storage&rarr;func&rarr;eventgrid&rarr;rbac
+&#9500;&#9472; parameters.json         # westeurope, suffix=001, prefix=order
+&#9492;&#9472; modules/
+    &#9500;&#9472; storage.bicep       # Storage Account + blob inbox + table + static website
+    &#9500;&#9472; cosmos.bicep        # Cosmos DB + SQL DB + Orders/OrderStatus containers
+    &#9500;&#9472; functionapp.bicep   # App Service Plan + Function App (MI) + App Insights
+    &#9500;&#9472; eventgrid.bicep     # System Topic + BlobCreated subscription &rarr; Function
+    &#9500;&#9472; acs.bicep           # Azure Communication Services (free tier)
+    &#9492;&#9472; rbac.bicep          # 5 role assignments via `existing` resource refs</code></pre>
+
+  <h3>Deploy Commands / Comandi di Deploy</h3>
+  <pre><code class="language-bash"># Create resource group / Creare resource group
+az group create --name rg-orderprocessing-001 --location westeurope
+
+# Deploy Bicep (7 resources + RBAC)
+az deployment group create \
+  --resource-group rg-orderprocessing-001 \
+  --template-file infra/main.bicep \
+  --parameters @infra/parameters.json
+
+# Deploy Function App
+func azure functionapp publish func-order-001 --python
+
+# Deploy webapp static site
+az storage blob upload-batch \
+  --account-name storder001 \
+  --auth-mode login \
+  --destination '$web' \
+  --source webapp/
+
+# Verify RBAC assignments
+az role assignment list --assignee $(az functionapp identity show \
+  --name func-order-001 \
+  --resource-group rg-orderprocessing-001 \
+  --query principalId -o tsv) --output table</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="costi">
+  <h2>9. Costs (Azure for Students) / Costi</h2>
+
+  <h3>Monthly Estimate / Stima Mensile</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Resource / Risorsa</th><th>Tier</th><th>Monthly Cost / Costo Mensile</th><th>Notes / Note</th></tr></thead>
+    <tbody>
+      <tr><td>Function App</td><td>Consumption (Y1)</td><td><strong>&euro;0,00</strong></td><td>1M free exec/month</td></tr>
+      <tr><td>Storage Account</td><td>Standard_LRS</td><td><strong>~&euro;0,05</strong></td><td>Negligible for &lt; 1 GB</td></tr>
+      <tr><td>Cosmos DB</td><td>Free Tier</td><td><strong>&euro;0,00</strong></td><td>1000 RU/s + 25 GB free</td></tr>
+      <tr><td>App Insights</td><td>Basic</td><td><strong>&euro;0,00</strong></td><td>5 GB/month free</td></tr>
+      <tr><td>Event Grid</td><td>Standard</td><td><strong>~&euro;0,60</strong></td><td>&euro;0.60/million operations</td></tr>
+      <tr><td>ACS SMS</td><td>Free Tier</td><td><strong>&euro;0,00</strong></td><td>200 SMS/month free</td></tr>
+      <tr><td><strong>Total / Totale</strong></td><td></td><td><strong>~&euro;0,65/month</strong></td><td>Covered by &euro;100 Azure for Students credits</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Cost per Batch (100 orders/class) / Costo per 100 ordini</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Operation / Operazione</th><th>Quantity &times; 100</th><th>Unit Cost / Costo Unitario</th><th>Total / Totale</th></tr></thead>
+    <tbody>
+      <tr><td>Function executions</td><td>~10 per order = 1000</td><td>&euro;0,00 (free tier)</td><td>&euro;0,00</td></tr>
+      <tr><td>Storage writes</td><td>~10 KB &times; 100 = 1 MB</td><td>&euro;0,0002/GB</td><td>&euro;0,00</td></tr>
+      <tr><td>Cosmos DB RUs</td><td>~10 RU &times; 100 = 1000 RU</td><td>&euro;0,00 (free tier)</td><td>&euro;0,00</td></tr>
+      <tr><td>Event Grid ops</td><td>2 per order &times; 100 = 200</td><td>&euro;0,60/million</td><td>&euro;0,00012</td></tr>
+      <tr><td>SMS</td><td>1 per order (first 200 free)</td><td>&euro;0,00 (free tier)</td><td>&euro;0,00</td></tr>
+      <tr><td><strong>Total per class</strong></td><td></td><td></td><td><strong>~&euro;0,00012</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="lang-section lang-en">
+    <h3><span class="flag">&#127468;&#127463;</span>English &mdash; Free Tier Limits</h3>
+    <ul>
+      <li><strong>Function App</strong>: 1M requests/month (~30K/day)</li>
+      <li><strong>Cosmos DB</strong>: 1000 RU/s sustained</li>
+      <li><strong>App Insights</strong>: 5 GB/month (~170 MB/day)</li>
+      <li><strong>Event Grid</strong>: 100K operations/month (~50K orders)</li>
+      <li><strong>ACS SMS</strong>: 200 SMS/month (&euro;0.0075/msg after)</li>
+    </ul>
+  </div>
+  <div class="lang-section lang-it">
+    <h3><span class="flag">&#127470;&#127481;</span>Italiano &mdash; Limiti Free Tier</h3>
+    <ul>
+      <li><strong>Function App</strong>: 1M richieste/mese (~30K/giorno)</li>
+      <li><strong>Cosmos DB</strong>: 1000 RU/s sostenuti</li>
+      <li><strong>App Insights</strong>: 5 GB/mese (~170 MB/giorno)</li>
+      <li><strong>Event Grid</strong>: 100K operazioni/mese (~50K ordini)</li>
+      <li><strong>ACS SMS</strong>: 200 SMS/mese (&euro;0,0075/msg dopo)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="cicd">
+  <h2>10. CI/CD Pipeline (GitHub Actions)</h2>
+
+  <p>Pipeline in <code>.github/workflows/deploy.yml</code>.
+  Trigger: push on <code>main</code>, PR to <code>main</code>, or manual dispatch.
+  Azure auth via <strong>Workload Identity Federation (OIDC)</strong> &mdash; no permanent secrets.</p>
+
+  <h3>Dependency Graph / Grafo Dipendenze</h3>
+  <div class="mermaid-container" onclick="openModal(this)">
+    <div class="mermaid">
+    graph LR
+        L["1. Lint\n(flake8 + black)"]
+        T["2. Test\n(pytest + coverage)"]
+        B["3. Build\n(zip deployment)"]
+        I["4. Deploy Infra\n(Bicep)"]
+        F["5. Deploy Functions\n(az functionapp deploy)"]
+        W["6. Deploy Webapp\n(az storage blob)"]
+
+        L --> T --> B --> I --> F
+        I --> W
+        style L fill:#d1fae5,stroke:#059669
+        style T fill:#d1fae5,stroke:#059669
+        style B fill:#dbeafe,stroke:#2563eb
+        style I fill:#fef3c7,stroke:#d97706
+        style F fill:#fef3c7,stroke:#d97706
+        style W fill:#fef3c7,stroke:#d97706
+    </div>
+  </div>
+
+  <h3>Pipeline Jobs / Job</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>#</th><th>Job</th><th>Trigger</th><th>Key Steps / Step Principali</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Lint</td><td>Push/PR</td><td><code>flake8 src/</code> &rarr; <code>black --check src/</code></td></tr>
+      <tr><td>2</td><td>Test</td><td>Push/PR</td><td><code>pip install -r requirements.txt</code> &rarr; <code>pytest --cov</code> &rarr; artifact</td></tr>
+      <tr><td>3</td><td>Build</td><td>Push main</td><td>Copy <code>src/ + host.json + requirements</code> &rarr; zip &rarr; artifact</td></tr>
+      <tr><td>4</td><td>Deploy Infra</td><td>Push main</td><td><code>az group create</code> &rarr; <code>arm-deploy@v2</code> with <code>infra/main.bicep</code></td></tr>
+      <tr><td>5</td><td>Deploy Functions</td><td>After Infra</td><td>Download artifact &rarr; <code>az functionapp deploy --package</code></td></tr>
+      <tr><td>6</td><td>Deploy Webapp</td><td>After Infra</td><td><code>az storage blob upload-batch --destination '$web'</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>GitHub Secrets Required / Segreti Richiesti</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Secret / Segreto</th><th>Value / Valore</th><th>How to Get / Come Ottenere</th></tr></thead>
+    <tbody>
+      <tr><td><code>AZURE_CLIENT_ID</code></td><td>Application (client) ID</td><td>App Registration &rarr; Overview</td></tr>
+      <tr><td><code>AZURE_TENANT_ID</code></td><td>Directory (tenant) ID</td><td>Azure AD &rarr; Properties</td></tr>
+      <tr><td><code>AZURE_SUBSCRIPTION_ID</code></td><td>Subscription ID</td><td>Subscriptions &rarr; Overview</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>One-Time Setup / Setup Rapido</h3>
+  <pre><code class="language-bash"># 1. Create App Registration
+az ad app create --display-name "github-order-pipeline" --query appId -o tsv
+
+# 2. Add federated credential (Azure Portal &rarr; App Registration &rarr; Certificates & Secrets)
+#    Scenario: GitHub Actions deploying to Azure
+#    Organization: (your-org), Repository: Exercise-Event-Chain-Output-bind
+#    Entity type: Environment &rarr; production
+
+# 3. Assign Contributor on resource group
+az role assignment create \
+  --assignee CLIENT_ID \
+  --role Contributor \
+  --scope /subscriptions/SUB_ID/resourceGroups/rg-orderprocessing-001
+
+# 4. Add secrets to GitHub repository</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="prossimi-passi">
+  <h2>11. Next Steps / Prossimi Passi</h2>
+
+  <p>The project follows <strong>SDD &rarr; TDD &rarr; Code</strong> methodology.
+  The backend core is complete. Remaining phases are frontend, infrastructure, and deploy.</p>
+
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Phase / Fase</th><th>Status / Stato</th><th>Files / File</th><th>Tests</th><th>Time / Tempo</th></tr></thead>
+    <tbody>
+      <tr><td>0 &mdash; SDD/KPI Framework</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>docs/10-sdd-workflow.md</code>, <code>docs/11-mvp-kpi-definition.md</code></td><td>&mdash;</td><td>30min</td></tr>
+      <tr><td>1 &mdash; Data Models</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>models.py</code> + <code>test_models.py</code></td><td>10 (100%)</td><td>45min</td></tr>
+      <tr><td>2a &mdash; Counter</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>counter.py</code> + <code>test_counter.py</code></td><td>8 (100%)</td><td>45min</td></tr>
+      <tr><td>2b &mdash; Activities</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>activities.py</code> + <code>test_activities.py</code></td><td>12 (100%)</td><td>90min</td></tr>
+      <tr><td>3 &mdash; Orchestrator</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>orchestrator.py</code> + <code>test_orchestrator.py</code></td><td>6 (100%)</td><td>60min</td></tr>
+      <tr><td>4 &mdash; Triggers</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>function_app.py</code> + <code>test_function_app.py</code></td><td>13 (89%)</td><td>90min</td></tr>
+      <tr><td>5 &mdash; Webapp</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>index.html</code>, <code>style.css</code>, <code>app.js</code></td><td>Visual check</td><td>60min</td></tr>
+      <tr><td>6 &mdash; Infra (Bicep)</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>infra/main.bicep</code> + 6 modules</td><td><code>az bicep build</code> compiles</td><td>60min</td></tr>
+      <tr><td>7 &mdash; CI/CD</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td><code>.github/workflows/deploy.yml</code></td><td>Manual (GitHub Actions)</td><td>30min</td></tr>
+      <tr><td>8 &mdash; Documentation</td><td><span class="badge badge-green">&#10004;&#65039; Complete</span></td><td>All <code>docs/</code> files + this document</td><td>&mdash;</td><td>60min</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Immediate Next Steps / Prossimi Passi Immediati</h3>
+  <ol>
+    <li><strong>Deploy on Azure</strong> &mdash; <code>az deployment group create</code> for resources, then <code>func azure functionapp publish</code> for Functions, then <code>az storage blob upload-batch</code> for webapp</li>
+    <li><strong>Configure GitHub OIDC</strong> &mdash; App Registration, federated credential, repository secrets</li>
+    <li><strong>End-to-end test</strong> &mdash; Submit order via webapp, verify SMS, confirm, verify completion</li>
+  </ol>
+
+  <h3>Final Summary / Riassunto Finale</h3>
+  <ul>
+    <li><strong>Source files</strong>: 5 Python modules + 3 webapp files + 9 infra/CI/CD + config files</li>
+    <li><strong>Tests</strong>: 49 tests (97% coverage) &mdash; all green</li>
+    <li><strong>Azure resources</strong>: 7 resources modeled in Bicep (all free tier compatible)</li>
+    <li><strong>RBAC</strong>: 5 role assignments via Managed Identity (zero connection strings)</li>
+    <li><strong>CI/CD</strong>: 6-job pipeline with OIDC auth, manual dispatch, skip-infra flag</li>
+    <li><strong>Cost</strong>: ~&euro;0,65/month (covered by Azure for Students)</li>
+    <li><strong>Total implementation time</strong>: ~8 hours (all phases complete)</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="esercizio">
+  <h2>12. Student Exercise Guide / Guida Studente</h2>
+
+  <p><strong>Duration / Durata</strong>: 3-4 hours/ore<br>
+  <strong>Prerequisites / Prerequisiti</strong>: Azure for Students subscription, basic Python, basic Git</p>
+
+  <h3>Part 1 / Parte 1: Setup (30 min)</h3>
+  <ul>
+    <li>[ ] Python 3.11+ installed / installato</li>
+    <li>[ ] VS Code + Azure Functions extension</li>
+    <li>[ ] Azure Functions Core Tools v4</li>
+    <li>[ ] Azurite: <code>npm install -g azurite</code></li>
+    <li>[ ] Clone repository</li>
+    <li>[ ] Virtual env: <code>python -m venv .venv && pip install -r requirements.txt</code></li>
+  </ul>
+
+  <h3>Part 2 / Parte 2: Explore Architecture (30 min)</h3>
+  <p>Read <code>docs/</code> and answer / Leggere e rispondere:</p>
+  <ol>
+    <li>Why must the DF orchestrator be deterministic? / Perch&eacute; l'orchestrator DF deve essere deterministico?</li>
+    <li>How does the counter prevent race conditions? / Come fa il contatore a prevenire race condition?</li>
+    <li>What happens if the customer confirms after 3 minutes? / Cosa succede se il cliente conferma dopo 3 minuti?</li>
+    <li>Why use Managed Identity instead of connection strings? / Perch&eacute; usare Managed Identity invece di connection strings?</li>
+  </ol>
+
+  <h3>Part 3 / Parte 3: Run Locally (45 min)</h3>
+  <pre><code class="language-bash"># Start emulators / Avviare emulatori
+azurite --silent --location ./azurite-data
+
+# Start Functions / Avviare Functions
+func start
+
+# Submit an order / Inviare un ordine
+curl -X POST http://localhost:7071/api/submit_order \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerName": "Mario Rossi",
+    "customerPhone": "+351911234567",
+    "items": [{"itemId":"ITM-001","name":"Laptop","quantity":1,"unitPrice":1200}],
+    "total": 1200, "tax": 276
+  }'
+
+# Poll status / Polling dello stato
+curl "http://localhost:7071/api/status?orderId=ORD-0001-abc123"
+
+# Confirm order / Confermare ordine
+curl -X POST "http://localhost:7071/api/confirm_handler?instance_id=ORD-0001-abc123"</code></pre>
+
+  <h3>Part 4 / Parte 4: Deploy to Azure (45 min)</h3>
+  <pre><code class="language-bash">az login
+az group create --name rg-orderprocessing-001 --location westeurope
+az deployment group create \
+  --resource-group rg-orderprocessing-001 \
+  --template-file infra/main.bicep \
+  --parameters suffix=001 location=westeurope
+func azure functionapp publish func-order-001 --python</code></pre>
+
+  <h3>Part 5 / Parte 5: Extension Exercises (60 min)</h3>
+  <p>Choose ONE / Scegliere UNO:</p>
+  <ul>
+    <li><strong>Option A</strong>: Add email notification with ACS Email</li>
+    <li><strong>Option B</strong>: Add order cancellation (second external event)</li>
+    <li><strong>Option C</strong>: Create admin dashboard with TimerTrigger (daily report)</li>
+    <li><strong>Option D</strong>: Add authentication with function keys</li>
+  </ul>
+
+  <h3>Part 6 / Parte 6: Clean Up (10 min)</h3>
+  <pre><code class="language-bash">az group delete --name rg-orderprocessing-001 --yes --no-wait</code></pre>
+
+  <h3>Grading Rubric / Griglia di Valutazione</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Criterion / Criterio</th><th>Points / Punti</th><th>Description / Descrizione</th></tr></thead>
+    <tbody>
+      <tr><td>Part 2 &mdash; Understanding / Comprensione</td><td>20</td><td>Correct answers to architecture questions</td></tr>
+      <tr><td>Part 3 &mdash; Local execution / Esecuzione locale</td><td>30</td><td>Working pipeline locally (confirmed + expired)</td></tr>
+      <tr><td>Part 4 &mdash; Deploy</td><td>25</td><td>Azure deployment, live endpoint test</td></tr>
+      <tr><td>Part 5 &mdash; Extension / Estensione</td><td>20</td><td>Working extension with explanation</td></tr>
+      <tr><td>Part 6 &mdash; Cleanup</td><td>5</td><td>Resources deleted, reflection submitted</td></tr>
+      <tr><td><strong>Total / Totale</strong></td><td><strong>100</strong></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="risultati">
+  <h2>13. SDD/TDD Methodology and Results / Metodologia e Risultati</h2>
+
+  <h3>Methodology / Metodologia: Spec-Driven Development</h3>
+  <p>The project follows <strong>SDD &rarr; TDD &rarr; Code</strong>, documented in <code>docs/10-sdd-workflow.md</code>:</p>
+  <ol>
+    <li><strong>Spec</strong> &mdash; Write module specifications (contract, input/output, error states)</li>
+    <li><strong>Test</strong> &mdash; Translate specs into test cases (TDD Red Phase &mdash; intentionally failing)</li>
+    <li><strong>Code</strong> &mdash; Implement minimal logic to pass tests (TDD Green Phase)</li>
+    <li><strong>Verify</strong> &mdash; Run full suite, check coverage, update KPI</li>
+  </ol>
+
+  <h3>KPI Scorecard / Scorecard KPI</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>KPI</th><th>Target</th><th>Result / Risultato</th><th>Status / Stato</th></tr></thead>
+    <tbody>
+      <tr><td><strong>T1</strong> &mdash; Test Pass Rate</td><td>100% (critical path)</td><td><strong>49/49 (100%)</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T2</strong> &mdash; Line Coverage (overall)</td><td>&ge;80%</td><td><strong>97%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T3a</strong> &mdash; Module: models.py</td><td>100%</td><td><strong>100%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T3b</strong> &mdash; Module: counter.py</td><td>&ge;95%</td><td><strong>100%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T3c</strong> &mdash; Module: activities.py</td><td>&ge;90%</td><td><strong>100%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T3d</strong> &mdash; Module: orchestrator.py</td><td>&ge;95%</td><td><strong>100%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T3e</strong> &mdash; Module: function_app.py</td><td>&ge;85%</td><td><strong>89%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T4</strong> &mdash; Test Collection</td><td>&ge;49 tests</td><td><strong>49</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T5</strong> &mdash; Type Safety</td><td>Zero mypy errors</td><td>Not run / Non eseguito</td><td><span class="badge badge-blue">&mdash;</span></td></tr>
+      <tr><td><strong>T6</strong> &mdash; IaC Validity</td><td>Bicep compiles</td><td>Not run / Non eseguito</td><td><span class="badge badge-blue">&mdash;</span></td></tr>
+      <tr><td><strong>T7</strong> &mdash; Auth Surface</td><td>Zero connection strings</td><td>&#10004;&#65039; verified on code</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T8</strong> &mdash; SMS Fallback</td><td>Simulated mode works</td><td>&#10004;&#65039; tested</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>T9</strong> &mdash; Determinism</td><td>No datetime.now()/random/uuid in orchestrator</td><td>&#10004;&#65039; verified</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Evolution: Red Phase &rarr; Green Phase / Evoluzione</h3>
+  <div class="card-grid">
+    <div class="card card-originale">
+      <h4>&#128308; TDD Red Phase (stubs)</h4>
+      <ul>
+        <li>Tests collected / Test raccolti: <strong>49</strong></li>
+        <li>Tests passing / Test passanti: <strong>15</strong></li>
+        <li>Tests failing / Test falliti: <strong>34</strong></li>
+        <li>Coverage: <strong>0%</strong></li>
+        <li class="muted">All intentional NotImplementedError</li>
+      </ul>
+    </div>
+    <div class="card card-decisioni">
+      <h4>&#128315; TDD Green Phase (implementation)</h4>
+      <ul>
+        <li>Tests collected / Test raccolti: <strong>49</strong></li>
+        <li>Tests passing / Test passanti: <strong>49</strong></li>
+        <li>Tests failing / Test falliti: <strong>0</strong></li>
+        <li>Coverage: <strong>97%</strong></li>
+        <li class="muted">All KPI targets met</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Per-Module Detail / Dettaglio per Modulo</h3>
+  <div class="table-wrapper">
+  <table>
+    <thead><tr><th>Module / Modulo</th><th>File</th><th>Tests</th><th>Passing / Passanti</th><th>Coverage / Copertura</th><th>Status / Stato</th></tr></thead>
+    <tbody>
+      <tr><td>Data Models</td><td><code>src/models.py</code></td><td>10</td><td>10</td><td>100%</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td>Counter</td><td><code>src/counter.py</code></td><td>8</td><td>8</td><td>100%</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td>Activities</td><td><code>src/activities.py</code></td><td>12</td><td>12</td><td>100%</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td>Orchestrator</td><td><code>src/orchestrator.py</code></td><td>6</td><td>6</td><td>100%</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td>Triggers</td><td><code>src/function_app.py</code></td><td>13</td><td>13</td><td>89%</td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+      <tr><td><strong>Total / Totale</strong></td><td><strong>5 modules / moduli</strong></td><td><strong>49</strong></td><td><strong>49</strong></td><td><strong>97%</strong></td><td><span class="badge badge-green">&#10004;&#65039;</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Test Output (pytest) / Risultato Test</h3>
+  <pre><code class="language-plaintext">$ pytest test/ --cov=src --tb=short
+collected 49 items
+49 passed in 1.05s
+
+----------- coverage: platform win32, python 3.11.15 -----------
+Name                  Stmts   Miss  Cover
+-----------------------------------------
+src/models.py            76      0   100%
+src/counter.py           25      0   100%
+src/activities.py        47      0   100%
+src/orchestrator.py      23      0   100%
+src/function_app.py      72      8    89%
+-----------------------------------------
+TOTAL                   243      8    97%</code></pre>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <p>ITS-ICT Piemonte — BAD 26, Cloud Services — Microsoft Azure</p>
+  <p>Event-Driven Order Processing Pipeline &mdash; Documento di Progetto &mdash; Giugno 2026</p>
+</footer>
+
+<div class="mermaid-modal" id="mermaidModal" onclick="closeModal(event)">
+  <span class="modal-close" onclick="closeModal(event)">&times;</span>
+  <div class="modal-content" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#0078D4',
+      primaryTextColor: '#fff',
+      primaryBorderColor: '#005a9e',
+      lineColor: '#64748b',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#f8fafc'
+    }
+  });
+
+  function openModal(container) {
+    const modal = document.getElementById('mermaidModal');
+    const content = document.getElementById('modalContent');
+    const svg = container.querySelector('svg');
+    if (svg) {
+      content.innerHTML = '<div class="mermaid">' + container.querySelector('.mermaid').innerHTML + '</div>';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        mermaid.run({ nodes: [content.querySelector('.mermaid')] });
+      }, 50);
+    }
+  }
+
+  function closeModal(e) {
+    const modal = document.getElementById('mermaidModal');
+    if (e.target === modal || e.target.classList.contains('modal-close')) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('mermaidModal');
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Scroll spy for ToC
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc a');
+  let activeLink = null;
+
+  function updateActiveLink() {
+    let current = null;
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect();
+      if (rect.top <= 100) { current = section.id; }
+    });
+    tocLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+        activeLink = link;
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLink);
+  window.addEventListener('load', updateActiveLink);
+</script>
+
+</body>
+</html>

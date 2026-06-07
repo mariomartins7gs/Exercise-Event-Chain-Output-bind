@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+env/
+venv/
+*.egg
+
+# IDE
+
+.idea/
+*.swp
+*.swo
+
+# Azure
+local.settings.json
+azurite-data/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+*.xml
+
+# Build
+dist/
+*.zip
+deployment/
+
+# OS
+.DS_Store
+Thumbs.db
+
+.python_packages
