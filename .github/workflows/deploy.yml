@@ -99,6 +99,7 @@ jobs:
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
         with:
+          deploymentName: deploy-${{ github.run_id }}-${{ github.run_attempt }}
           resourceGroupName: ${{ env.AZURE_RG }}
           template: infra/main.bicep
           parameters: >
