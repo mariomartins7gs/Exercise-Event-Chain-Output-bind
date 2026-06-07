@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "5289874035693543680"
+      "templateHash": "4823045244465380287"
     }
   },
   "parameters": {
@@ -26,6 +26,9 @@
       "defaultValue": false
     }
   },
+  "variables": {
+    "deploymentSuffix": "[format('{0}{1}', parameters('suffix'), uniqueString(resourceGroup().id))]"
+  },
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
@@ -41,7 +44,7 @@
             "value": "[parameters('location')]"
           },
           "suffix": {
-            "value": "[parameters('suffix')]"
+            "value": "[variables('deploymentSuffix')]"
           },
           "prefix": {
             "value": "[parameters('prefix')]"
@@ -154,7 +157,7 @@
             "value": "[parameters('location')]"
           },
           "suffix": {
-            "value": "[parameters('suffix')]"
+            "value": "[variables('deploymentSuffix')]"
           },
           "prefix": {
             "value": "[parameters('prefix')]"
@@ -305,7 +308,7 @@
             "value": "[parameters('location')]"
           },
           "suffix": {
-            "value": "[parameters('suffix')]"
+            "value": "[variables('deploymentSuffix')]"
           },
           "prefix": {
             "value": "[parameters('prefix')]"
@@ -373,7 +376,7 @@
             "value": "[parameters('location')]"
           },
           "suffix": {
-            "value": "[parameters('suffix')]"
+            "value": "[variables('deploymentSuffix')]"
           },
           "prefix": {
             "value": "[parameters('prefix')]"
@@ -563,7 +566,7 @@
             "value": "[parameters('location')]"
           },
           "suffix": {
-            "value": "[parameters('suffix')]"
+            "value": "[variables('deploymentSuffix')]"
           },
           "prefix": {
             "value": "[parameters('prefix')]"
@@ -668,7 +671,7 @@
             "value": "[parameters('prefix')]"
           },
           "suffix": {
-            "value": "[parameters('suffix')]"
+            "value": "[variables('deploymentSuffix')]"
           }
         },
         "template": {

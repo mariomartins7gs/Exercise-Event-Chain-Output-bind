@@ -20,8 +20,6 @@ env:
   SUFFIX: ${{ inputs.suffix || vars.SUFFIX || '001' }}
   PREFIX: ${{ vars.PREFIX || 'order' }}
   AZURE_RG: rg-orderprocessing-${{ inputs.suffix || vars.SUFFIX || '001' }}
-  FUNC_APP_NAME: func-order-${{ inputs.suffix || vars.SUFFIX || '001' }}
-  STORAGE_ACCOUNT: storder${{ inputs.suffix || vars.SUFFIX || '001' }}
   PYTHON_VERSION: '3.11'
 
 permissions:
@@ -108,6 +106,19 @@ jobs:
             prefix=${{ env.PREFIX }}
             enableFreeTier=true
           failOnStdErr: false
+      - name: Save infra outputs
+        run: |
+          az deployment group show \
+            --resource-group ${{ env.AZURE_RG }} \
+            --name deploy-${{ github.run_id }}-${{ github.run_attempt }} \
+            --query properties.outputs \
+            -o json > infra-outputs.json
+          cat infra-outputs.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: infra-outputs
+          path: infra-outputs.json
+          retention-days: 1
 
   deploy-functions:
     needs: [build, deploy-infra]
@@ -118,6 +129,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: function-app
+      - uses: actions/download-artifact@v4
+        with:
+          name: infra-outputs
       - uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -125,8 +139,9 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Deploy Function App
         run: |
+          FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
           az functionapp deploy \
-            --name ${{ env.FUNC_APP_NAME }} \
+            --name "$FUNC_NAME" \
             --resource-group ${{ env.AZURE_RG }} \
             --package function-app.zip \
             --type zip
@@ -138,6 +153,9 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: infra-outputs
       - uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -145,8 +163,9 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Upload webapp to static site
         run: |
+          STORAGE=$(jq -r '.storageAccountName.value' infra-outputs.json)
           az storage blob upload-batch \
-            --account-name ${{ env.STORAGE_ACCOUNT }} \
+            --account-name "$STORAGE" \
             --auth-mode login \
             --destination '$web' \
             --source webapp/ \
