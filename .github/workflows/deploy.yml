@@ -140,11 +140,13 @@ jobs:
       - name: Deploy Function App
         run: |
           FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
-          az functionapp deploy \
+          az webapp deploy \
             --name "$FUNC_NAME" \
             --resource-group ${{ env.AZURE_RG }} \
-            --package function-app.zip \
+            --src-path function-app.zip \
             --type zip
+          sleep 30
+          echo "Waiting for function app to sync triggers..."
       - name: Create Event Grid subscription
         run: |
           FUNC_ID=$(jq -r '.functionAppId.value' infra-outputs.json)
