@@ -1,5 +1,4 @@
 import json
-import os
 
 from azure.functions import HttpResponse
 
@@ -7,7 +6,9 @@ from src.counter import CounterConflictError, OrderCounter
 from src.models import OrderPayload
 
 
-async def submit_order(req, cosmos_container, blob_client, df_client) -> HttpResponse:
+async def submit_order(
+    req, cosmos_container, blob_client, df_client
+) -> HttpResponse:
     try:
         body = req.get_json()
     except (ValueError, TypeError):
@@ -41,7 +42,9 @@ async def submit_order(req, cosmos_container, blob_client, df_client) -> HttpRes
 
     try:
         await df_client.start_new_orchestration(
-            function_name="order_workflow", instance_id=counter_result["instanceId"], input=body
+            function_name="order_workflow",
+            instance_id=counter_result["instanceId"],
+            input=body,
         )
     except Exception:
         pass
@@ -84,7 +87,9 @@ async def confirm_handler(req, df_client) -> HttpResponse:
             status_code=410,
         )
 
-    await df_client.raise_event(instance_id=instance_id, event_name="Confirmed", data={})
+    await df_client.raise_event(
+        instance_id=instance_id, event_name="Confirmed", data={}
+    )
     return HttpResponse("Order confirmed", status_code=200)
 
 
@@ -94,7 +99,9 @@ async def get_order_status(req, cosmos_container) -> HttpResponse:
         return HttpResponse("Missing orderId parameter", status_code=400)
 
     try:
-        doc = await cosmos_container.read_item(item=order_id, partition_key=order_id)
+        doc = await cosmos_container.read_item(
+            item=order_id, partition_key=order_id
+        )
     except Exception:
         return HttpResponse("Order not found", status_code=404)
 
@@ -103,7 +110,9 @@ async def get_order_status(req, cosmos_container) -> HttpResponse:
         try:
             from datetime import datetime, timezone
 
-            expires = datetime.fromisoformat(doc["expiresAt"].replace("Z", "+00:00"))
+            expires = datetime.fromisoformat(
+                doc["expiresAt"].replace("Z", "+00:00")
+            )
             now = datetime.now(timezone.utc)
             seconds_remaining = max(0, int((expires - now).total_seconds()))
         except Exception:

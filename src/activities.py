@@ -50,7 +50,9 @@ async def write_status_update(payload: dict, cosmos_container) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     entry = {"status": status, "timestamp": now, "details": details}
     try:
-        doc = await cosmos_container.read_item(item=order_id, partition_key=order_id)
+        doc = await cosmos_container.read_item(
+            item=order_id, partition_key=order_id
+        )
         doc["status"] = status
         doc["lastUpdatedAt"] = now
         doc.setdefault("timeline", []).append(entry)

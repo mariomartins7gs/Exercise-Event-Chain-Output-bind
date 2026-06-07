@@ -38,7 +38,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install flake8 black
       - run: flake8 src/
-      - run: black --check src/
+      - run: black --check src/ --line-length 79
 
   test:
     needs: lint

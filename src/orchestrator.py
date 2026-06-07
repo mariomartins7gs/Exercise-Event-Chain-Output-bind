@@ -24,7 +24,10 @@ async def order_workflow(context) -> dict:
         "send_sms",
         {
             "phoneNumber": validated.get("customerPhone"),
-            "message": f"Order {validated.get('displayOrder')} received. Confirm at: /api/confirm_handler",
+            "message": (
+                f"Order {validated.get('displayOrder')} received."
+                " Confirm at: /api/confirm_handler"
+            ),
             "orderId": validated.get("instanceId"),
         },
     )
@@ -44,7 +47,9 @@ async def order_workflow(context) -> dict:
         {
             "orderId": validated.get("instanceId"),
             "status": OrderStatus.PENDING_CONFIRMATION.value,
-            "details": f"Waiting for confirmation (expires at {expiry.isoformat()})",
+            "details": (
+                f"Waiting for confirmation (expires at {expiry.isoformat()})"
+            ),
         },
     )
 

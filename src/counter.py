@@ -34,11 +34,17 @@ class OrderCounter:
                 }
             except exceptions.CosmosResourceNotFoundError:
                 await self.container.create_item(
-                    body={"id": "orderCounter", "partitionKey": "counter", "currentValue": 0}
+                    body={
+                        "id": "orderCounter",
+                        "partitionKey": "counter",
+                        "currentValue": 0,
+                    }
                 )
                 continue
             except exceptions.CosmosAccessConditionFailedError:
                 if attempt == self.max_retries:
-                    raise CounterConflictError("Max retries exceeded on counter CAS")
-                await asyncio.sleep(0.1 * (2 ** attempt))
+                    raise CounterConflictError(
+                        "Max retries exceeded on counter CAS"
+                    )
+                await asyncio.sleep(0.1 * (2**attempt))
                 continue
