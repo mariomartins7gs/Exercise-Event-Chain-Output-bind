@@ -62,8 +62,10 @@ async def get_order_status_trigger(req: func.HttpRequest) -> func.HttpResponse:
 
 
 @app.event_grid_trigger(arg_name="event")
-async def event_grid_trigger(event: func.EventGridEvent):
-    return json.dumps({"status": "received"})
+@app.durable_client_input(client_name="client")
+async def order_validator(event: func.EventGridEvent, client: df.DurableOrchestrationClient):
+    from src.function_app import order_validator as impl
+    return await impl(event, client)
 
 
 @app.orchestration_trigger(context_name="context")

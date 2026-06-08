@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           mkdir -p deployment/src
-          cp src/function_app.py deployment/
+          cp function_app.py deployment/
           cp -r src/. deployment/src/
           cp host.json deployment/
           cp requirements.txt deployment/
