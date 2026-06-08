@@ -69,7 +69,9 @@ jobs:
           cp requirements.txt deployment/
       - run: |
           cd deployment
+          pip install -r requirements.txt -t . 2>&1 | tail -5
           zip -r ../function-app.zip .
+      - run: echo "ZIP size $(du -sh ../function-app.zip | cut -f1)"
       - uses: actions/upload-artifact@v4
         with:
           name: function-app
@@ -176,7 +178,10 @@ jobs:
             --settings "WEBSITE_RUN_FROM_PACKAGE=$PACKAGE_URL" \
             --output none
 
-          echo "Deployed via RUN_FROM_PACKAGE. Waiting for function app to restart and sync..."
+          echo "Restarting function app to pick up new package..."
+          az functionapp restart --name "$FUNC_NAME" --resource-group "$RG" --output none
+
+          echo "Deployed via RUN_FROM_PACKAGE. Waiting for function app to start and sync..."
           sleep 90
       - name: Create Event Grid subscription
         run: |
