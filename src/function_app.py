@@ -2,7 +2,7 @@ import json
 import os
 
 import azure.functions as func
-from azure.cosmos.aio import ContainerClient as CosmosContainerClient
+from azure.cosmos.aio import CosmosClient
 from azure.identity.aio import DefaultAzureCredential
 from azure.storage.blob.aio import BlobServiceClient
 
@@ -12,16 +12,12 @@ from src.models import OrderPayload
 app = func.FunctionApp()
 
 
-def _get_cosmos_container(container_name: str) -> CosmosContainerClient:
+def _get_cosmos_container(container_name: str):
     endpoint = os.environ["COSMOS_DB_ACCOUNT_ENDPOINT"]
     database = os.environ["COSMOS_DB_DATABASE_NAME"]
     credential = DefaultAzureCredential()
-    return CosmosContainerClient(
-        endpoint,
-        credential,
-        database_name=database,
-        container_name=container_name,
-    )
+    client = CosmosClient(endpoint, credential)
+    return client.get_database_client(database).get_container_client(container_name)
 
 
 def _get_blob_service_client() -> BlobServiceClient:
