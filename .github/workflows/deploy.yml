@@ -178,6 +178,30 @@ jobs:
 
           echo "Deployed via RUN_FROM_PACKAGE. Waiting for sync..."
           sleep 30
+      - name: Create Event Grid subscription
+        run: |
+          FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
+          TOPIC_NAME=$(jq -r '.systemTopicName.value' infra-outputs.json)
+          RG=${{ env.AZURE_RG }}
+
+          KEY=$(az functionapp keys list \
+            --name "$FUNC_NAME" \
+            --resource-group "$RG" \
+            --query "systemKeys.eventgrid_extension" \
+            --output tsv)
+
+          ENDPOINT="https://$FUNC_NAME.azurewebsites.net/runtime/webhooks/EventGridExtensionConfig?functionName=order_validator&code=$KEY"
+
+          az eventgrid system-topic event-subscription create \
+            --name "blob-created-sub" \
+            --resource-group "$RG" \
+            --system-topic-name "$TOPIC_NAME" \
+            --endpoint-type webhook \
+            --endpoint "$ENDPOINT" \
+            --included-event-types Microsoft.Storage.BlobCreated \
+            --subject-begins-with "/blobServices/default/containers/orders-inbox/" \
+            --max-delivery-attempts 3 \
+            --event-ttl 5
 
   deploy-webapp:
     needs: [build, deploy-infra]
