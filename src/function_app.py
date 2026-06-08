@@ -175,13 +175,3 @@ async def get_order_status(req: func.HttpRequest) -> func.HttpResponse:
         mimetype="application/json",
     )
 
-
-@app.event_grid_trigger(arg_name="event")
-@app.durable_client_input(client_name="df_client")
-async def order_validator(event: func.EventGridEvent, df_client):
-    await df_client.start_new_orchestration(
-        function_name="order_workflow",
-        instance_id=None,
-        input=event.get_json(),
-    )
-    return {"status": "started"}

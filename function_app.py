@@ -64,8 +64,13 @@ async def get_order_status_trigger(req: func.HttpRequest) -> func.HttpResponse:
 @app.event_grid_trigger(arg_name="event")
 @app.durable_client_input(client_name="client")
 async def order_validator(event: func.EventGridEvent, client: df.DurableOrchestrationClient):
-    from src.function_app import order_validator as impl
-    return await impl(event, client)
+    body = event.get_json() if isinstance(event, func.EventGridEvent) else event
+    instance_id = await client.start_new_orchestration(
+        function_name="order_workflow",
+        instance_id=None,
+        input=body,
+    )
+    return {"status": "started", "instanceId": instance_id}
 
 
 @app.orchestration_trigger(context_name="context")

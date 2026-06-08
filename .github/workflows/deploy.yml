@@ -182,8 +182,8 @@ jobs:
           echo "Restarting function app to pick up new package..."
           az functionapp restart --name "$FUNC_NAME" --resource-group "$RG" --output none
 
-          echo "Deployed via RUN_FROM_PACKAGE. Waiting for function app to start and sync..."
-          sleep 90
+          echo "Deployed via RUN_FROM_PACKAGE. Waiting for function app to start..."
+          sleep 30
       - name: Create Event Grid subscription
         run: |
           FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
@@ -210,6 +210,19 @@ jobs:
             echo "Error: Could not obtain function master key"
             exit 1
           fi
+
+          echo "Waiting for Event Grid extension to initialize..."
+          for i in $(seq 1 18); do
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://$FUNC_NAME.azurewebsites.net/runtime/webhooks/EventGridExtensionConfig?functionName=order_validator&code=$KEY" \
+              -X POST -H "Content-Type: application/json" -d '{}' 2>/dev/null || echo "000")
+            if [ "$HTTP" != "404" ] && [ "$HTTP" != "000" ]; then
+              echo "Event Grid endpoint ready (HTTP $HTTP)"
+              break
+            fi
+            echo "Waiting... (HTTP $HTTP)"
+            sleep 10
+          done
 
           ENDPOINT="https://$FUNC_NAME.azurewebsites.net/runtime/webhooks/EventGridExtensionConfig?functionName=order_validator&code=$KEY"
 
