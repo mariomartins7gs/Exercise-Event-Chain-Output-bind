@@ -43,6 +43,16 @@ resource storageTableRole 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   }
 }
 
+resource storageQueueRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageName, functionPrincipalId, 'queueContributor')
+  scope: storageAccount
+  properties: {
+    principalId: functionPrincipalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+    principalType: 'ServicePrincipal'
+  }
+}
+
 resource cosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-04-15' = {
   parent: cosmosAccount
   name: guid(cosmosName, functionPrincipalId, 'cosmosContributor')

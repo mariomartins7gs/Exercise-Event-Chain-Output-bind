@@ -186,8 +186,13 @@ jobs:
       - name: Create Event Grid subscription
         run: |
           FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
+          FUNC_ID=$(jq -r '.functionAppId.value' infra-outputs.json)
           TOPIC_NAME=$(jq -r '.systemTopicName.value' infra-outputs.json)
           RG=${{ env.AZURE_RG }}
+
+          echo "Function app: $FUNC_NAME"
+          STATE=$(az functionapp show -n "$FUNC_NAME" -g "$RG" --query "state" -o tsv 2>/dev/null)
+          echo "State: $STATE"
 
           for i in $(seq 1 6); do
             KEY=$(az functionapp keys list \
@@ -203,23 +208,31 @@ jobs:
             sleep 15
           done
 
-          if [ -z "$KEY" ] || [ "$KEY" = "null" ]; then
-            echo "Error: Could not obtain event grid extension key"
-            exit 1
+          if [ -n "$KEY" ] && [ "$KEY" != "null" ]; then
+            ENDPOINT="https://$FUNC_NAME.azurewebsites.net/runtime/webhooks/EventGridExtensionConfig?functionName=order_validator&code=$KEY"
+            az eventgrid system-topic event-subscription create \
+              --name "blob-created-sub" \
+              --resource-group "$RG" \
+              --system-topic-name "$TOPIC_NAME" \
+              --endpoint-type webhook \
+              --endpoint "$ENDPOINT" \
+              --included-event-types Microsoft.Storage.BlobCreated \
+              --subject-begins-with "/blobServices/default/containers/orders-inbox/" \
+              --max-delivery-attempts 3 \
+              --event-ttl 5
+          else
+            echo "Webhook endpoint key not available, falling back to AzureFunction endpoint type..."
+            az eventgrid system-topic event-subscription create \
+              --name "blob-created-sub" \
+              --resource-group "$RG" \
+              --system-topic-name "$TOPIC_NAME" \
+              --endpoint-type azurefunction \
+              --endpoint "$FUNC_ID" \
+              --included-event-types Microsoft.Storage.BlobCreated \
+              --subject-begins-with "/blobServices/default/containers/orders-inbox/" \
+              --max-delivery-attempts 3 \
+              --event-ttl 5
           fi
-
-          ENDPOINT="https://$FUNC_NAME.azurewebsites.net/runtime/webhooks/EventGridExtensionConfig?functionName=order_validator&code=$KEY"
-
-          az eventgrid system-topic event-subscription create \
-            --name "blob-created-sub" \
-            --resource-group "$RG" \
-            --system-topic-name "$TOPIC_NAME" \
-            --endpoint-type webhook \
-            --endpoint "$ENDPOINT" \
-            --included-event-types Microsoft.Storage.BlobCreated \
-            --subject-begins-with "/blobServices/default/containers/orders-inbox/" \
-            --max-delivery-attempts 3 \
-            --event-ttl 5
 
   deploy-webapp:
     needs: [build, deploy-infra]
