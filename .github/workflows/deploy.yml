@@ -137,16 +137,46 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Deploy Function App
+      - name: Deploy Function App (Run from Package)
         run: |
           FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
-          az functionapp deploy \
+          STORAGE=$(jq -r '.storageAccountName.value' infra-outputs.json)
+          RG=${{ env.AZURE_RG }}
+
+          CONTAINER="deploy-packages"
+          az storage container create \
+            --account-name "$STORAGE" \
+            --auth-mode login \
+            --name "$CONTAINER" \
+            --output none
+
+          BLOB_NAME="func-$(date +%s).zip"
+          az storage blob upload \
+            --account-name "$STORAGE" \
+            --auth-mode login \
+            --container-name "$CONTAINER" \
+            --file function-app.zip \
+            --name "$BLOB_NAME" \
+            --output none
+
+          SAS=$(az storage blob generate-sas \
+            --account-name "$STORAGE" \
+            --auth-mode login \
+            --container-name "$CONTAINER" \
+            --name "$BLOB_NAME" \
+            --permissions r \
+            --expiry $(date -u -d "+1 hour" '+%Y-%m-%dT%H:%MZ') \
+            --output tsv)
+
+          PACKAGE_URL="https://$STORAGE.blob.core.windows.net/$CONTAINER/$BLOB_NAME?$SAS"
+          az functionapp config appsettings set \
             --name "$FUNC_NAME" \
-            --resource-group ${{ env.AZURE_RG }} \
-            --src-path function-app.zip \
-            --type zip
+            --resource-group "$RG" \
+            --settings "WEBSITE_RUN_FROM_PACKAGE=$PACKAGE_URL" \
+            --output none
+
+          echo "Deployed via RUN_FROM_PACKAGE. Waiting for sync..."
           sleep 30
-          echo "Waiting for function app to sync triggers..."
       - name: Create Event Grid subscription
         run: |
           FUNC_ID=$(jq -r '.functionAppId.value' infra-outputs.json)
