@@ -176,19 +176,32 @@ jobs:
             --settings "WEBSITE_RUN_FROM_PACKAGE=$PACKAGE_URL" \
             --output none
 
-          echo "Deployed via RUN_FROM_PACKAGE. Waiting for sync..."
-          sleep 30
+          echo "Deployed via RUN_FROM_PACKAGE. Waiting for function app to restart and sync..."
+          sleep 90
       - name: Create Event Grid subscription
         run: |
           FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
           TOPIC_NAME=$(jq -r '.systemTopicName.value' infra-outputs.json)
           RG=${{ env.AZURE_RG }}
 
-          KEY=$(az functionapp keys list \
-            --name "$FUNC_NAME" \
-            --resource-group "$RG" \
-            --query "systemKeys.eventgrid_extension" \
-            --output tsv)
+          for i in $(seq 1 6); do
+            KEY=$(az functionapp keys list \
+              --name "$FUNC_NAME" \
+              --resource-group "$RG" \
+              --query "systemKeys.eventgrid_extension" \
+              --output tsv 2>/dev/null)
+            if [ -n "$KEY" ] && [ "$KEY" != "null" ]; then
+              echo "Event grid key obtained after ${i} attempt(s)"
+              break
+            fi
+            echo "Waiting for event grid extension key (attempt $i)..."
+            sleep 15
+          done
+
+          if [ -z "$KEY" ] || [ "$KEY" = "null" ]; then
+            echo "Error: Could not obtain event grid extension key"
+            exit 1
+          fi
 
           ENDPOINT="https://$FUNC_NAME.azurewebsites.net/runtime/webhooks/EventGridExtensionConfig?functionName=order_validator&code=$KEY"
 
