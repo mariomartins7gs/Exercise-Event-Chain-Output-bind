@@ -4,6 +4,10 @@ from uuid import uuid4
 from azure.cosmos import exceptions
 
 
+COUNTER_ID = "orderCounter"
+COUNTER_PK = "orderCounter"
+
+
 class CounterConflictError(Exception):
     pass
 
@@ -17,7 +21,7 @@ class OrderCounter:
         for attempt in range(self.max_retries + 1):
             try:
                 counter = await self.container.read_item(
-                    item="orderCounter", partition_key="counter"
+                    item=COUNTER_ID, partition_key=COUNTER_PK
                 )
                 new_value = counter.get("currentValue", 0) + 1
                 await self.container.replace_item(
@@ -35,8 +39,7 @@ class OrderCounter:
             except exceptions.CosmosResourceNotFoundError:
                 await self.container.create_item(
                     body={
-                        "id": "orderCounter",
-                        "partitionKey": "counter",
+                        "id": COUNTER_ID,
                         "currentValue": 0,
                     }
                 )

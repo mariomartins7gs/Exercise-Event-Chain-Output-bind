@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           mkdir -p deployment
-          cp -r src/ deployment/
+          cp -r src/. deployment/
           cp host.json deployment/
           cp requirements.txt deployment/
       - run: |
