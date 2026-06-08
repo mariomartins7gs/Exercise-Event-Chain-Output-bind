@@ -140,11 +140,10 @@ jobs:
       - name: Deploy Function App
         run: |
           FUNC_NAME=$(jq -r '.functionAppName.value' infra-outputs.json)
-          az webapp deploy \
+          az functionapp deployment source config-zip \
             --name "$FUNC_NAME" \
             --resource-group ${{ env.AZURE_RG }} \
-            --src-path function-app.zip \
-            --type zip
+            --src function-app.zip
           sleep 30
           echo "Waiting for function app to sync triggers..."
       - name: Create Event Grid subscription
@@ -178,6 +177,15 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Enable static website
+        run: |
+          STORAGE=$(jq -r '.storageAccountName.value' infra-outputs.json)
+          az storage blob service-properties update \
+            --account-name "$STORAGE" \
+            --auth-mode login \
+            --static-website \
+            --index-document index.html \
+            --404-document index.html
       - name: Upload webapp to static site
         run: |
           STORAGE=$(jq -r '.storageAccountName.value' infra-outputs.json)

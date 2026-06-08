@@ -27,6 +27,11 @@ resource inboxContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
   properties: { publicAccess: 'None' }
 }
 
+resource webContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  parent: blobService
+  name: '\$web'
+}
+
 resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-01-01' = {
   parent: storageAccount
   name: 'default'
