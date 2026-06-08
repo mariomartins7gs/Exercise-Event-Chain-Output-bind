@@ -17,7 +17,9 @@ def _get_cosmos_container(container_name: str):
     database = os.environ["COSMOS_DB_DATABASE_NAME"]
     credential = DefaultAzureCredential()
     client = CosmosClient(endpoint, credential)
-    return client.get_database_client(database).get_container_client(container_name)
+    return client.get_database_client(database).get_container_client(
+        container_name
+    )
 
 
 def _get_blob_service_client() -> BlobServiceClient:
