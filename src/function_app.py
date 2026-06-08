@@ -17,7 +17,10 @@ def _get_cosmos_container(container_name: str) -> CosmosContainerClient:
     database = os.environ["COSMOS_DB_DATABASE_NAME"]
     credential = DefaultAzureCredential()
     return CosmosContainerClient(
-        endpoint, credential, database_name=database, container_name=container_name
+        endpoint,
+        credential,
+        database_name=database,
+        container_name=container_name,
     )
 
 
@@ -29,9 +32,7 @@ def _get_blob_service_client() -> BlobServiceClient:
 
 @app.route(route="submit_order", auth_level=func.AuthLevel.ANONYMOUS)
 @app.durable_client_input(client_name="df_client")
-async def submit_order(
-    req: func.HttpRequest, df_client
-) -> func.HttpResponse:
+async def submit_order(req: func.HttpRequest, df_client) -> func.HttpResponse:
     try:
         body = req.get_json()
     except (ValueError, TypeError):
@@ -51,9 +52,13 @@ async def submit_order(
             counter = OrderCounter(cosmos_client)
             counter_result = await counter.get_next_id()
         except CounterConflictError:
-            return func.HttpResponse("Counter exhausted, try again", status_code=503)
+            return func.HttpResponse(
+                "Counter exhausted, try again", status_code=503
+            )
         except Exception:
-            return func.HttpResponse("Counter service unavailable", status_code=503)
+            return func.HttpResponse(
+                "Counter service unavailable", status_code=503
+            )
 
         blob_name = f"{counter_result['displayOrder']}.json"
         try:
@@ -66,7 +71,9 @@ async def submit_order(
                     overwrite=False,
                 )
         except Exception:
-            return func.HttpResponse("Failed to write order blob", status_code=500)
+            return func.HttpResponse(
+                "Failed to write order blob", status_code=500
+            )
 
     try:
         await df_client.start_new_orchestration(
@@ -93,7 +100,9 @@ async def submit_order(
 
 @app.route(route="confirm_handler", auth_level=func.AuthLevel.ANONYMOUS)
 @app.durable_client_input(client_name="df_client")
-async def confirm_handler(req: func.HttpRequest, df_client) -> func.HttpResponse:
+async def confirm_handler(
+    req: func.HttpRequest, df_client
+) -> func.HttpResponse:
     try:
         body = req.get_json()
         instance_id = body.get("instance_id")

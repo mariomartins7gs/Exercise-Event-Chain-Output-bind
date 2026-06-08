@@ -3,7 +3,6 @@ from uuid import uuid4
 
 from azure.cosmos import exceptions
 
-
 COUNTER_ID = "orderCounter"
 COUNTER_PK = "orderCounter"
 
