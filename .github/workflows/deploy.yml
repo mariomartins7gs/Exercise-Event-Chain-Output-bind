@@ -162,6 +162,7 @@ jobs:
           SAS=$(az storage blob generate-sas \
             --account-name "$STORAGE" \
             --auth-mode login \
+            --as-user \
             --container-name "$CONTAINER" \
             --name "$BLOB_NAME" \
             --permissions r \
