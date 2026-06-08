@@ -41,6 +41,7 @@ module eventgrid 'modules/eventgrid.bicep' = {
     suffix: deploymentSuffix
     prefix: prefix
     storageAccountId: storage.outputs.id
+    functionAppId: functionapp.outputs.functionAppId
   }
 }
 

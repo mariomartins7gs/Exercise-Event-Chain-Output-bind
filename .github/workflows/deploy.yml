@@ -178,21 +178,6 @@ jobs:
 
           echo "Deployed via RUN_FROM_PACKAGE. Waiting for sync..."
           sleep 30
-      - name: Create Event Grid subscription
-        run: |
-          FUNC_ID=$(jq -r '.functionAppId.value' infra-outputs.json)
-          TOPIC_NAME=$(jq -r '.systemTopicName.value' infra-outputs.json)
-          STORAGE_ID=$(jq -r '.storageAccountName.value' infra-outputs.json)
-          az eventgrid system-topic event-subscription create \
-            --name "blob-created-sub" \
-            --resource-group ${{ env.AZURE_RG }} \
-            --system-topic-name "$TOPIC_NAME" \
-            --endpoint-type azurefunction \
-            --endpoint "$FUNC_ID" \
-            --included-event-types Microsoft.Storage.BlobCreated \
-            --subject-begins-with "/blobServices/default/containers/orders-inbox/" \
-            --max-delivery-attempts 3 \
-            --event-ttl 5
 
   deploy-webapp:
     needs: [build, deploy-infra]
